@@ -33,8 +33,8 @@ const ProfileMenu = () => {
 
 const NavBar = () => {
   return (
-    <Navbar className=" my-20  p-2 lg:rounded-full lg:pl-6">
-      <div className="relative mx-auto flex items-center justify-between text-blue-gray-900">
+    <Navbar className=" my-16  p-2 lg:rounded-full lg:pl-6">
+      <div className="relative mx-auto flex items-center justify-between text-blue-gray-800">
         <Typography
           as="a"
           href="#"

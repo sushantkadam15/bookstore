@@ -1,8 +1,12 @@
+import booksData from "../Seed Data/amazon.books.json";
+import { useState } from "react";
 import {
   MagnifyingGlassIcon,
   ChevronUpDownIcon,
 } from "@heroicons/react/24/outline";
-import { PencilIcon, UserPlusIcon } from "@heroicons/react/24/solid";
+import { PencilIcon } from "@heroicons/react/24/solid";
+import { BookPlus } from "lucide-react";
+import Fuse from "fuse.js";
 import {
   Card,
   CardHeader,
@@ -18,6 +22,7 @@ import {
   Avatar,
   IconButton,
   Tooltip,
+  Checkbox,
 } from "@material-tailwind/react";
 
 const TABS = [
@@ -35,75 +40,84 @@ const TABS = [
   },
 ];
 
-const TABLE_HEAD = ["Member", "Function", "Status", "Employed", ""];
+const TABLE_HEAD = ["", "Title", "Function", "Status", "Description", ""];
 
-const TABLE_ROWS = [
-  {
-    img: "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/team-3.jpg",
-    name: "John Michael",
-    email: "john@creative-tim.com",
-    job: "Manager",
-    org: "Organization",
-    online: true,
-    date: "23/04/18",
-  },
-  {
-    img: "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/team-2.jpg",
-    name: "Alexa Liras",
-    email: "alexa@creative-tim.com",
-    job: "Programator",
-    org: "Developer",
-    online: false,
-    date: "23/04/18",
-  },
-  {
-    img: "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/team-1.jpg",
-    name: "Laurent Perrier",
-    email: "laurent@creative-tim.com",
-    job: "Executive",
-    org: "Projects",
-    online: false,
-    date: "19/09/17",
-  },
-  {
-    img: "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/team-4.jpg",
-    name: "Michael Levi",
-    email: "michael@creative-tim.com",
-    job: "Programator",
-    org: "Developer",
-    online: true,
-    date: "24/12/08",
-  },
-  {
-    img: "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/team-5.jpg",
-    name: "Richard Gran",
-    email: "richard@creative-tim.com",
-    job: "Manager",
-    org: "Executive",
-    online: false,
-    date: "04/10/21",
-  },
-];
+// ------------ Components Starts here -----------------
 
 const BooksTable = () => {
+  const [displayBooks, setDisplayBooks] = useState(booksData);
+  const [itemsToShow, setItemsToShow] = useState({
+    start: 0,
+    end: 5,
+    total: 5,
+  });
+
+  const [pageCount, setPageCount] = useState({
+    current: 1,
+    total: Math.ceil(displayBooks.length / itemsToShow.total),
+  });
+
+  const fuseOptions = {
+    keys: ["title"],
+  };
+
+  const fuse = new Fuse(booksData, fuseOptions);
+
+  const handleSearch = (e) => {
+    const searchResult = fuse.search(e.target.value);
+    if (searchResult !== undefined) {
+      const finalResult = searchResult.map((result) => result.item);
+
+      setDisplayBooks(finalResult);
+    } else {
+      console.log("test");
+    }
+  };
+  const handlePrevious = () => {
+    setItemsToShow({
+      ...itemsToShow,
+      start: itemsToShow.start - itemsToShow.total,
+      end: itemsToShow.end - itemsToShow.total,
+    });
+    setPageCount({
+      ...pageCount,
+      current: pageCount.current - 1,
+    });
+  };
+
+  const handleNext = () => {
+    setItemsToShow({
+      ...itemsToShow,
+      start: itemsToShow.start + itemsToShow.total,
+      end: itemsToShow.end + itemsToShow.total,
+    });
+    setPageCount({
+      ...pageCount,
+      current: pageCount.current + 1,
+    });
+  };
   return (
     <Card className="h-full w-full">
       <CardHeader floated={false} shadow={false} className="rounded-none">
         <div className="mb-8 flex items-center justify-between gap-8">
           <div>
             <Typography variant="h5" color="blue-gray">
-              Members list
+              Books Rack
             </Typography>
             <Typography color="gray" className="mt-1 font-normal">
-              See information about all members
+              See information about all books
             </Typography>
           </div>
           <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
             <Button variant="outlined" size="sm">
               view all
             </Button>
-            <Button className="flex items-center gap-3" size="sm">
-              <UserPlusIcon strokeWidth={2} className="h-4 w-4" /> Add member
+            <Button
+              className="flex items-center gap-3  bg-blue-gray-800"
+              size="sm"
+            >
+              <BookPlus />
+              Add Books
             </Button>
           </div>
         </div>
@@ -121,6 +135,7 @@ const BooksTable = () => {
             <Input
               label="Search"
               icon={<MagnifyingGlassIcon className="h-5 w-5" />}
+              onChange={handleSearch}
             />
           </div>
         </div>
@@ -149,96 +164,135 @@ const BooksTable = () => {
             </tr>
           </thead>
           <tbody>
-            {TABLE_ROWS.map(
-              ({ img, name, email, job, org, online, date }, index) => {
-                const isLast = index === TABLE_ROWS.length - 1;
-                const classes = isLast
-                  ? "p-4"
-                  : "p-4 border-b border-blue-gray-50";
+            {displayBooks
+              .slice(itemsToShow.start, itemsToShow.end)
+              .map(
+                (
+                  {
+                    _id,
+                    title,
+                    isbn,
+                    pageCount,
+                    publishedDate,
+                    thumbnailUrl,
+                    shortDescription,
+                    status,
+                    authors,
+                    categories,
+                  },
+                  index,
+                ) => {
+                  const isLast = index === displayBooks.length - 1;
+                  const authorsString =
+                    authors && authors.toString().replace(",", ", ");
 
-                return (
-                  <tr key={name}>
-                    <td className={classes}>
-                      <div className="flex items-center gap-3">
-                        <Avatar src={img} alt={name} size="sm" />
+                  const classes = isLast
+                    ? "p-4"
+                    : "p-4 border-b border-blue-gray-50 max-w-96";
+
+                  return (
+                    <tr key={_id}>
+                      <td>
+                        <Checkbox
+                          ripple={false}
+                          className="h-6 w-6 rounded-full border-gray-900/20 bg-gray-900/10 transition-all hover:scale-105 hover:before:opacity-0"
+                        />
+                      </td>
+                      <td className={classes}>
+                        <div className="flex items-center gap-3">
+                          <Avatar src={thumbnailUrl} alt={title} size="xl" />
+                          <div className="flex flex-col">
+                            <Typography
+                              variant="small"
+                              color="blue-gray"
+                              className="font-normal"
+                            >
+                              {title}
+                            </Typography>
+                            <Typography
+                              variant="small"
+                              color="blue-gray"
+                              className="my-1 line-clamp-1 w-96 font-normal opacity-70"
+                            >
+                              {authorsString}
+                            </Typography>
+                          </div>
+                        </div>
+                      </td>
+                      <td className={classes}>
                         <div className="flex flex-col">
                           <Typography
                             variant="small"
                             color="blue-gray"
                             className="font-normal"
                           >
-                            {name}
+                            {title}
                           </Typography>
                           <Typography
                             variant="small"
                             color="blue-gray"
                             className="font-normal opacity-70"
                           >
-                            {email}
+                            {title}
                           </Typography>
                         </div>
-                      </div>
-                    </td>
-                    <td className={classes}>
-                      <div className="flex flex-col">
+                      </td>
+                      <td className={classes}>
+                        <div className="w-max">
+                          <Chip
+                            variant="ghost"
+                            size="sm"
+                            value={
+                              status === "PUBLISH"
+                                ? "Published"
+                                : "Not released"
+                            }
+                            color={status === "PUBLISH" ? "green" : "blue-gray"}
+                          />
+                        </div>
+                      </td>
+                      <td className={classes}>
                         <Typography
                           variant="small"
                           color="blue-gray"
-                          className="font-normal"
+                          className="line-clamp-1 w-96 font-normal"
                         >
-                          {job}
+                          {shortDescription}
                         </Typography>
-                        <Typography
-                          variant="small"
-                          color="blue-gray"
-                          className="font-normal opacity-70"
-                        >
-                          {org}
-                        </Typography>
-                      </div>
-                    </td>
-                    <td className={classes}>
-                      <div className="w-max">
-                        <Chip
-                          variant="ghost"
-                          size="sm"
-                          value={online ? "online" : "offline"}
-                          color={online ? "green" : "blue-gray"}
-                        />
-                      </div>
-                    </td>
-                    <td className={classes}>
-                      <Typography
-                        variant="small"
-                        color="blue-gray"
-                        className="font-normal"
-                      >
-                        {date}
-                      </Typography>
-                    </td>
-                    <td className={classes}>
-                      <Tooltip content="Edit User">
-                        <IconButton variant="text">
-                          <PencilIcon className="h-4 w-4" />
-                        </IconButton>
-                      </Tooltip>
-                    </td>
-                  </tr>
-                );
-              }
-            )}
+                      </td>
+                      <td className={classes}>
+                        <Tooltip content="Edit User">
+                          <IconButton variant="text">
+                            <PencilIcon className="h-4 w-4" />
+                          </IconButton>
+                        </Tooltip>
+                      </td>
+                    </tr>
+                  );
+                },
+              )}
           </tbody>
         </table>
       </CardBody>
       <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
         <Typography variant="small" color="blue-gray" className="font-normal">
-          Page 1 of 10
+          Page {pageCount.current} of {pageCount.total}
         </Typography>
         <div className="flex gap-2">
-          <Button variant="outlined" size="sm">
+          <Button
+            disabled={pageCount.current === 1}
+            variant="outlined"
+            size="sm"
+            onClick={handlePrevious}
+          >
             Previous
           </Button>
-          <Button variant="outlined" size="sm">
+          <Button
+            disabled={pageCount.current === pageCount.total}
+            variant="outlined"
+            size="sm"
+            onClick={handleNext}
+          >
             Next
           </Button>
         </div>

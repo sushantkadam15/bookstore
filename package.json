@@ -4,7 +4,7 @@
   "description": "",
   "main": "server/server.js",
   "scripts": {
-    "start": "concurrently \"nodemon backend/server.js\" \"cd client && npm run dev\"",
+    "start": "concurrently \"nodemon backend/server.js\" \"cd client && npm run start\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

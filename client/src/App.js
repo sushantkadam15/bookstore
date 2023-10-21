@@ -1,7 +1,13 @@
-import { Button } from "@material-tailwind/react";
+import BooksTable from "./Components/BooksTable";
+import NavBar from "./Components/NavBar";
 
-function App() {
-  return <Button>Button</Button>;
-}
+const App = () => {
+  return (
+    <section className="mx-auto max-w-screen-xl">
+      <NavBar />
+      <BooksTable />
+    </section>
+  );
+};
 
 export default App;

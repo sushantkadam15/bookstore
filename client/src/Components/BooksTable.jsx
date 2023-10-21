@@ -25,23 +25,6 @@ import {
   Checkbox,
 } from "@material-tailwind/react";
 
-const TABS = [
-  {
-    label: "All",
-    value: "all",
-  },
-  {
-    label: "Monitored",
-    value: "monitored",
-  },
-  {
-    label: "Unmonitored",
-    value: "unmonitored",
-  },
-];
-
-const TABLE_HEAD = ["", "Title", "Function", "Status", "Description", ""];
-
 // ------------ Components Starts here -----------------
 
 const BooksTable = () => {
@@ -57,22 +40,82 @@ const BooksTable = () => {
     total: Math.ceil(displayBooks.length / itemsToShow.total),
   });
 
+  const TABLE_HEAD = ["", "Title", "Function", "Status", "Description", ""];
+  const TABS = [
+    {
+      label: "All",
+      value: "all",
+    },
+    {
+      label: "Published",
+      value: "published",
+    },
+    {
+      label: "Unknown",
+      value: "unknown",
+    },
+  ];
+
   const fuseOptions = {
-    keys: ["title"],
+    keys: ["title", "status"],
   };
 
   const fuse = new Fuse(booksData, fuseOptions);
+
+  const updateDisplayedBooks = (update) => {
+    setDisplayBooks(update);
+    setPageCount({
+      ...pageCount,
+      current: 1,
+      total: Math.ceil(update.length / itemsToShow.total),
+    });
+  };
 
   const handleSearch = (e) => {
     const searchResult = fuse.search(e.target.value);
     if (searchResult !== undefined) {
       const finalResult = searchResult.map((result) => result.item);
-
-      setDisplayBooks(finalResult);
+      updateDisplayedBooks(finalResult);
     } else {
       console.log("test");
     }
   };
+
+  const handleTabChange = (value) => {
+    console.log("file: BooksTable.jsx:85 ~ handleTabChange ~ value:", value);
+    if (value === "all") {
+      updateDisplayedBooks(booksData);
+    } else if (value === "published") {
+      const publishedBooks = booksData.filter(
+        (book) => book.status === "PUBLISH",
+      );
+      console.log(publishedBooks.length);
+      updateDisplayedBooks(publishedBooks);
+    } else if (value === "unknown") {
+      const unknownPublishDates = booksData.filter(
+        (book) => !book.status || book.status !== "PUBLISH",
+      );
+      updateDisplayedBooks(unknownPublishDates);
+    }
+  };
+
+  // #TODO Fix Condition
+  const handleViewAll = () => {
+    if (itemsToShow.end === displayBooks.total) {
+      setItemsToShow({
+        ...itemsToShow,
+        start: 1,
+        end: displayBooks.length,
+      });
+    } else {
+      setItemsToShow({
+        ...itemsToShow,
+        start: 1,
+        end: 5,
+      });
+    }
+  };
+
   const handlePrevious = () => {
     setItemsToShow({
       ...itemsToShow,
@@ -96,6 +139,7 @@ const BooksTable = () => {
       current: pageCount.current + 1,
     });
   };
+
   return (
     <Card className="h-full w-full">
       <CardHeader floated={false} shadow={false} className="rounded-none">
@@ -109,8 +153,8 @@ const BooksTable = () => {
             </Typography>
           </div>
           <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
-            <Button variant="outlined" size="sm">
-              view all
+            <Button variant="outlined" size="sm" onClick={handleViewAll}>
+              {itemsToShow.end === 5 ? "view all" : "View less"}
             </Button>
             <Button
               className="flex items-center gap-3  bg-blue-gray-800"
@@ -125,7 +169,11 @@ const BooksTable = () => {
           <Tabs value="all" className="w-full md:w-max">
             <TabsHeader>
               {TABS.map(({ label, value }) => (
-                <Tab key={value} value={value}>
+                <Tab
+                  key={value}
+                  value={value}
+                  onClick={() => handleTabChange(value)}
+                >
                   &nbsp;&nbsp;{label}&nbsp;&nbsp;
                 </Tab>
               ))}
@@ -243,9 +291,7 @@ const BooksTable = () => {
                             variant="ghost"
                             size="sm"
                             value={
-                              status === "PUBLISH"
-                                ? "Published"
-                                : "Not released"
+                              status === "PUBLISH" ? "Published" : "Unknown"
                             }
                             color={status === "PUBLISH" ? "green" : "blue-gray"}
                           />

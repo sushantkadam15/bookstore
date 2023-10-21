@@ -99,7 +99,7 @@ const BooksTable = () => {
     }
   };
 
-  // #TODO Fix Condition
+  // #TODO Fix Conditiongit
   const handleViewAll = () => {
     if (itemsToShow.end === displayBooks.total) {
       setItemsToShow({

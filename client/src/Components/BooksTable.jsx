@@ -47,7 +47,6 @@ const BooksTable = () => {
     last: Math.ceil(displayedBookData.length / paginationSettings.max),
   });
   const [viewMode, setViewMode] = useState("view less");
-
   return (
     <Card className="h-full w-full">
       <CardHeader floated={false} shadow={false} className="rounded-none">

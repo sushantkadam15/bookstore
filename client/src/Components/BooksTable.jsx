@@ -1,5 +1,5 @@
 import booksData from "../Seed Data/amazon.books.json";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   MagnifyingGlassIcon,
   ChevronUpDownIcon,
@@ -14,6 +14,7 @@ import {
   filterBooksByTab,
   updateItemsToShow,
   handlePageChange,
+  toggleViewMode,
 } from "../Utility/bookViewFunctions";
 import {
   Card,
@@ -47,6 +48,7 @@ const BooksTable = () => {
     last: Math.ceil(displayedBookData.length / paginationSettings.max),
   });
   const [viewMode, setViewMode] = useState("view less");
+
   return (
     <Card className="h-full w-full">
       <CardHeader floated={false} shadow={false} className="rounded-none">
@@ -64,11 +66,12 @@ const BooksTable = () => {
               variant="outlined"
               size="sm"
               onClick={() => {
-                setViewMode((prevViewMode) =>
-                  prevViewMode === "view less" ? "view more" : "view less",
-                );
-                filterBooksByTab(
-                  displayedBookData,
+                const viewToggle =
+                  viewMode === "view less" ? "view more" : "view less";
+                setViewMode(viewToggle);
+
+                toggleViewMode(
+                  booksData,
                   viewMode,
                   paginationSettings,
                   setPaginationSettings,
@@ -95,7 +98,17 @@ const BooksTable = () => {
                 <Tab
                   key={value}
                   value={value}
-                  onClick={() => filterBooksByTab(value)}
+                  onClick={() =>
+                    filterBooksByTab(
+                      value,
+                      pageInfo,
+                      setPageInfo,
+                      displayedBookData,
+                      setDisplayedBookData,
+                      booksData,
+                      paginationSettings,
+                    )
+                  }
                 >
                   &nbsp;&nbsp;{label}&nbsp;&nbsp;
                 </Tab>

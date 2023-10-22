@@ -61,7 +61,7 @@ export const filterBooksBySearch = (
   }
 };
 
-export const filterBooksByTab = (
+export const toggleViewMode = (
   booksData,
   tabValue,
   paginationSettings,
@@ -92,15 +92,47 @@ export const filterBooksByTab = (
       last: 1,
     });
   }
-  //   if (tabValue === "all") {
-  //     return booksData;
-  //   } else if (tabValue === "published") {
-  //     return booksData.filter((book) => book.status === "PUBLISH");
-  //   } else if (tabValue === "unknown") {
-  //     return booksData.filter(
-  //       (book) => !book.status || book.status !== "PUBLISH",
-  //     );
-  //   }
+};
+
+export const filterBooksByTab = (
+  value,
+  pageInfo,
+  setPageInfo,
+  displayedBookData,
+  setDisplayedBookData,
+  booksData,
+  paginationSettings,
+) => {
+  if (value === "all") {
+    setDisplayedBookData(booksData);
+    setPageInfo({
+      ...pageInfo,
+      start: 1,
+      last: Math.ceil(booksData.length / paginationSettings.max),
+    });
+  } else if (value === "published") {
+    const publishedBooks = booksData.filter(
+      (book) => book.status === "PUBLISH",
+    );
+    setDisplayedBookData(publishedBooks);
+    setPageInfo({
+      ...pageInfo,
+      start: 1,
+      last: Math.ceil(publishedBooks.length / paginationSettings.max),
+    });
+  } else if (value === "unknown") {
+    const booksWithUnknownPublishedDate = booksData.filter(
+      (book) => !book.hasOwnProperty("status") || book.status !== "PUBLISH",
+    );
+    setDisplayedBookData(booksWithUnknownPublishedDate);
+    setPageInfo({
+      ...pageInfo,
+      start: 1,
+      last: Math.ceil(
+        booksWithUnknownPublishedDate.length / paginationSettings.max,
+      ),
+    });
+  }
 };
 
 export const updateItemsToShow = (itemsToShow, displayBooks) => {

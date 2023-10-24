@@ -14,7 +14,6 @@ import {
   filterBooksByTab,
   updateItemsToShow,
   handlePageChange,
-  toggleViewMode,
 } from "../Utility/bookViewFunctions";
 import {
   Card,
@@ -39,15 +38,18 @@ import {
 const BooksTable = () => {
   const [displayedBookData, setDisplayedBookData] = useState(booksData);
   const [paginationSettings, setPaginationSettings] = useState({
-    start: 0,
-    end: 5,
-    max: 5,
+    startIndex: 0,
+    endIndex: 4,
+    maxItemsDisplayed: 5,
   });
-  const [pageInfo, setPageInfo] = useState({
-    current: 1,
-    last: Math.ceil(displayedBookData.length / paginationSettings.max),
+  const [pageNumbers, setPageNumbers] = useState({
+    start: 1,
+    end: Math.ceil(
+      displayedBookData.length / paginationSettings.maxItemsDisplayed,
+    ),
   });
-  const [viewMode, setViewMode] = useState("view less");
+
+  const [isViewMoreOn, setIsViewMoreOn] = useState(false);
 
   return (
     <Card className="h-full w-full">
@@ -65,22 +67,9 @@ const BooksTable = () => {
             <Button
               variant="outlined"
               size="sm"
-              onClick={() => {
-                const viewToggle =
-                  viewMode === "view less" ? "view more" : "view less";
-                setViewMode(viewToggle);
-
-                toggleViewMode(
-                  booksData,
-                  viewMode,
-                  paginationSettings,
-                  setPaginationSettings,
-                  pageInfo,
-                  setPageInfo,
-                );
-              }}
+              onClick={() => setIsViewMoreOn(!isViewMoreOn)}
             >
-              {viewMode === "view less" ? "view more" : "view less"}
+              {isViewMoreOn ? "view more" : "view less"}
             </Button>
             <Button
               className="flex items-center gap-3  bg-blue-gray-800"
@@ -101,9 +90,8 @@ const BooksTable = () => {
                   onClick={() =>
                     filterBooksByTab(
                       value,
-                      pageInfo,
-                      setPageInfo,
-                      displayedBookData,
+                      pageNumbers,
+                      setPageNumbers,
                       setDisplayedBookData,
                       booksData,
                       paginationSettings,
@@ -119,16 +107,16 @@ const BooksTable = () => {
             <Input
               label="Search"
               icon={<MagnifyingGlassIcon className="h-5 w-5" />}
-              onChange={(e) =>
+              onChange={(e) => {
                 filterBooksBySearch(
                   booksData,
                   e.target.value,
                   setDisplayedBookData,
-                  pageInfo,
-                  setPageInfo,
-                  paginationSettings.max,
-                )
-              }
+                  pageNumbers,
+                  setPageNumbers,
+                  paginationSettings,
+                );
+              }}
             />
           </div>
         </div>
@@ -156,17 +144,22 @@ const BooksTable = () => {
               ))}
             </tr>
           </thead>
+          {/* Table Body  */}
           <tbody>
             {displayedBookData.length !== 0 ? (
               displayedBookData
-                .slice(paginationSettings.start, paginationSettings.end)
+                .slice(
+                  paginationSettings.startIndex,
+                  isViewMoreOn
+                    ? paginationSettings.length
+                    : paginationSettings.endIndex,
+                )
                 .map(
                   (
                     {
                       _id,
                       title,
                       isbn,
-                      paginationSettings,
                       publishedDate,
                       thumbnailUrl,
                       shortDescription,
@@ -281,22 +274,41 @@ const BooksTable = () => {
       </CardBody>
       <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
         <Typography variant="small" color="blue-gray" className="font-normal">
-          Page {pageInfo.current} of {pageInfo.last}
+          Page {pageNumbers.start} of{" "}
+          {Math.ceil(
+            displayedBookData.length / paginationSettings.maxItemsDisplayed,
+          )}
         </Typography>
         <div className="flex gap-2">
           <Button
-            disabled={pageInfo.current === 1}
+            disabled={pageNumbers.start === 1}
             variant="outlined"
             size="sm"
-            onClick={handlePageChange}
+            onClick={() =>
+              handlePageChange(
+                "previous",
+                paginationSettings,
+                setPaginationSettings,
+                pageNumbers,
+                setPageNumbers,
+              )
+            }
           >
             Previous
           </Button>
           <Button
-            disabled={pageInfo.current === pageInfo.total}
+            disabled={pageNumbers.start === pageNumbers.end}
             variant="outlined"
             size="sm"
-            onClick={handlePageChange}
+            onClick={() =>
+              handlePageChange(
+                "next",
+                paginationSettings,
+                setPaginationSettings,
+                pageNumbers,
+                setPageNumbers,
+              )
+            }
           >
             Next
           </Button>

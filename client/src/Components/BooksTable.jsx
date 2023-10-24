@@ -12,6 +12,7 @@ import {
   tabs,
   filterBooksBySearch,
   filterBooksByTab,
+  formatDate,
 } from "../Utility/bookViewFunctions";
 import {
   Card,
@@ -205,14 +206,14 @@ const BooksTable = () => {
                               color="blue-gray"
                               className="font-normal"
                             >
-                              {title}
+                              {formatDate(publishedDate.$date)}
                             </Typography>
                             <Typography
                               variant="small"
                               color="blue-gray"
                               className="font-normal opacity-70"
                             >
-                              {title}
+                              {`ISBN: ${isbn}`}
                             </Typography>
                           </div>
                         </td>
@@ -238,13 +239,6 @@ const BooksTable = () => {
                           >
                             {shortDescription}
                           </Typography>
-                        </td>
-                        <td className={classes}>
-                          <Tooltip content="Edit User">
-                            <IconButton variant="text">
-                              <PencilIcon className="h-4 w-4" />
-                            </IconButton>
-                          </Tooltip>
                         </td>
                       </tr>
                     );

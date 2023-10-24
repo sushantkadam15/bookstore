@@ -1,7 +1,7 @@
 import Fuse from "fuse.js";
 
 //  Table headers for the book table.
-export const tableHead = ["", "Title", "Function", "Status", "Description", ""];
+export const tableHead = ["", "Title", "Function", "Status", "Description"];
 
 //  Tabs for filtering books.
 export const tabs = [
@@ -19,12 +19,20 @@ export const tabs = [
   },
 ];
 
+export const formatDate = (inputDate) => {
+  const date = new Date(inputDate);
+  const options = {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  };
+
+  const formattedDate = date.toLocaleDateString("en-US", options);
+  return formattedDate;
+};
+
 const dataBySelectedTab = (booksData, selectedTab) => {
   if (selectedTab === "all") {
-    console.log(
-      "🚀 ~ file: bookViewFunctions.js:24 ~ dataBySelectedTab ~ selectedTab:",
-      selectedTab,
-    );
     return booksData;
   } else if (selectedTab === "published") {
     const publishedBooks = booksData.filter(

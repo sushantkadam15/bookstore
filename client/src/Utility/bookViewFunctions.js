@@ -19,19 +19,42 @@ export const tabs = [
   },
 ];
 
+const dataBySelectedTab = (booksData, selectedTab) => {
+  if (selectedTab === "all") {
+    console.log(
+      "🚀 ~ file: bookViewFunctions.js:24 ~ dataBySelectedTab ~ selectedTab:",
+      selectedTab,
+    );
+    return booksData;
+  } else if (selectedTab === "published") {
+    const publishedBooks = booksData.filter(
+      (book) => book.status === "PUBLISH",
+    );
+    return publishedBooks;
+  } else if (selectedTab === "unknown") {
+    const booksWithUnknownPublishedDate = booksData.filter(
+      (book) => !book.hasOwnProperty("status") || book.status !== "PUBLISH",
+    );
+    return booksWithUnknownPublishedDate;
+  }
+};
+
 // Function to filter books based on a search query.
 export const filterBooksBySearch = (
   booksData,
   searchQuery,
   setDisplayedBookData,
+  selectedTab,
 ) => {
+  const bookDataByTabSelected = dataBySelectedTab(booksData, selectedTab);
+
   // Configure search options for fuzzy search.
   const fuseOptions = {
     keys: ["title"],
   };
 
   if (searchQuery) {
-    const fuse = new Fuse(booksData, fuseOptions);
+    const fuse = new Fuse(bookDataByTabSelected, fuseOptions);
 
     // Perform a search and update displayed books based on the search results.
     const searchResult = fuse.search(searchQuery);
@@ -44,7 +67,7 @@ export const filterBooksBySearch = (
     }
   } else {
     // If the search query is empty (or includes only spaces), show all books.
-    setDisplayedBookData(booksData);
+    setDisplayedBookData(bookDataByTabSelected);
   }
 };
 

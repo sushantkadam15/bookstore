@@ -30,6 +30,7 @@ import {
   Tooltip,
   Checkbox,
 } from "@material-tailwind/react";
+import { useRef } from "react";
 
 // ------------ Components Starts here -----------------
 
@@ -44,6 +45,8 @@ const BooksTable = () => {
   const lastPage = Math.ceil(displayedBookData.length / itemsPerPage) || 1;
   const itemStartIndex = (currentPage - 1) * itemsPerPage;
   const itemEndIndex = itemStartIndex + itemsPerPage;
+  const [selectedTab, setSelectedTab] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   return (
     <Card className="h-full w-full">
@@ -78,13 +81,15 @@ const BooksTable = () => {
           </div>
         </div>
         <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-          <Tabs value="all" className="w-full md:w-max">
+          <Tabs value={selectedTab} className="w-full md:w-max">
             <TabsHeader>
               {tabs.map(({ label, value }) => (
                 <Tab
                   key={value}
                   value={value}
                   onClick={() => {
+                    setSearchQuery("");
+                    setSelectedTab(value);
                     filterBooksByTab(value, setDisplayedBookData, booksData);
                     setCurrentPage(1);
                   }}
@@ -98,11 +103,14 @@ const BooksTable = () => {
             <Input
               label="Search"
               icon={<MagnifyingGlassIcon className="h-5 w-5" />}
+              value={searchQuery}
               onChange={(e) => {
+                setSearchQuery(e.target.value);
                 filterBooksBySearch(
                   booksData,
                   e.target.value,
                   setDisplayedBookData,
+                  selectedTab,
                 );
                 setCurrentPage(1);
               }}

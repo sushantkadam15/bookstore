@@ -1,5 +1,5 @@
 import booksData from "../Seed Data/amazon.books.json";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   MagnifyingGlassIcon,
   ChevronUpDownIcon,
@@ -12,8 +12,6 @@ import {
   tabs,
   filterBooksBySearch,
   filterBooksByTab,
-  updateItemsToShow,
-  handlePageChange,
 } from "../Utility/bookViewFunctions";
 import {
   Card,
@@ -37,19 +35,15 @@ import {
 
 const BooksTable = () => {
   const [displayedBookData, setDisplayedBookData] = useState(booksData);
-  const [paginationSettings, setPaginationSettings] = useState({
-    startIndex: 0,
-    endIndex: 4,
-    maxItemsDisplayed: 5,
-  });
-  const [pageNumbers, setPageNumbers] = useState({
-    start: 1,
-    end: Math.ceil(
-      displayedBookData.length / paginationSettings.maxItemsDisplayed,
-    ),
-  });
 
+  // Pagination and Page Info
   const [isViewMoreOn, setIsViewMoreOn] = useState(false);
+
+  const itemsPerPage = isViewMoreOn ? displayedBookData.length : 5;
+  const [currentPage, setCurrentPage] = useState(1);
+  const lastPage = Math.ceil(displayedBookData.length / itemsPerPage) || 1;
+  const itemStartIndex = (currentPage - 1) * itemsPerPage;
+  const itemEndIndex = itemStartIndex + itemsPerPage;
 
   return (
     <Card className="h-full w-full">
@@ -67,9 +61,12 @@ const BooksTable = () => {
             <Button
               variant="outlined"
               size="sm"
-              onClick={() => setIsViewMoreOn(!isViewMoreOn)}
+              onClick={() => {
+                setIsViewMoreOn(!isViewMoreOn);
+                setCurrentPage(1);
+              }}
             >
-              {isViewMoreOn ? "view more" : "view less"}
+              {isViewMoreOn ? "view less" : "view more"}
             </Button>
             <Button
               className="flex items-center gap-3  bg-blue-gray-800"
@@ -87,16 +84,10 @@ const BooksTable = () => {
                 <Tab
                   key={value}
                   value={value}
-                  onClick={() =>
-                    filterBooksByTab(
-                      value,
-                      pageNumbers,
-                      setPageNumbers,
-                      setDisplayedBookData,
-                      booksData,
-                      paginationSettings,
-                    )
-                  }
+                  onClick={() => {
+                    filterBooksByTab(value, setDisplayedBookData, booksData);
+                    setCurrentPage(1);
+                  }}
                 >
                   &nbsp;&nbsp;{label}&nbsp;&nbsp;
                 </Tab>
@@ -112,10 +103,8 @@ const BooksTable = () => {
                   booksData,
                   e.target.value,
                   setDisplayedBookData,
-                  pageNumbers,
-                  setPageNumbers,
-                  paginationSettings,
                 );
+                setCurrentPage(1);
               }}
             />
           </div>
@@ -148,12 +137,7 @@ const BooksTable = () => {
           <tbody>
             {displayedBookData.length !== 0 ? (
               displayedBookData
-                .slice(
-                  paginationSettings.startIndex,
-                  isViewMoreOn
-                    ? paginationSettings.length
-                    : paginationSettings.endIndex,
-                )
+                .slice(itemStartIndex, itemEndIndex)
                 .map(
                   (
                     {
@@ -274,41 +258,22 @@ const BooksTable = () => {
       </CardBody>
       <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
         <Typography variant="small" color="blue-gray" className="font-normal">
-          Page {pageNumbers.start} of{" "}
-          {Math.ceil(
-            displayedBookData.length / paginationSettings.maxItemsDisplayed,
-          )}
+          Page {currentPage} of {lastPage}
         </Typography>
         <div className="flex gap-2">
           <Button
-            disabled={pageNumbers.start === 1}
+            disabled={currentPage === 1}
             variant="outlined"
             size="sm"
-            onClick={() =>
-              handlePageChange(
-                "previous",
-                paginationSettings,
-                setPaginationSettings,
-                pageNumbers,
-                setPageNumbers,
-              )
-            }
+            onClick={() => setCurrentPage((prevPage) => prevPage - 1)}
           >
             Previous
           </Button>
           <Button
-            disabled={pageNumbers.start === pageNumbers.end}
+            disabled={currentPage === lastPage}
             variant="outlined"
             size="sm"
-            onClick={() =>
-              handlePageChange(
-                "next",
-                paginationSettings,
-                setPaginationSettings,
-                pageNumbers,
-                setPageNumbers,
-              )
-            }
+            onClick={() => setCurrentPage((prevPage) => prevPage + 1)}
           >
             Next
           </Button>

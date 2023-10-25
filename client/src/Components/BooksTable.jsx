@@ -5,7 +5,7 @@ import {
   ChevronUpDownIcon,
 } from "@heroicons/react/24/outline";
 import { PencilIcon } from "@heroicons/react/24/solid";
-import { BookPlus } from "lucide-react";
+import { BookOpen, BookPlus, BookType, BookX, RotateCw } from "lucide-react";
 import { Frown } from "lucide-react";
 import {
   tableHead,
@@ -48,7 +48,19 @@ const BooksTable = () => {
   const itemEndIndex = itemStartIndex + itemsPerPage;
   const [selectedTab, setSelectedTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [editModeOnFor, setEditModeOnFor] = useState({
+    id: null,
+    key: null,
+  });
 
+  const handleEditModeToggle = (elementToActive, id, key) => {
+    if (elementToActive === "input") {
+      setEditModeOnFor({ ...editModeOnFor, id: id, key: key });
+    } else {
+      console.log("onl");
+      setEditModeOnFor({ ...editModeOnFor, id: null, key: null });
+    }
+  };
   return (
     <Card className="h-full w-full">
       <CardHeader floated={false} shadow={false} className="rounded-none">
@@ -61,7 +73,32 @@ const BooksTable = () => {
               See information about all books
             </Typography>
           </div>
+          {/* Action Buttons  */}
           <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+            <Button
+              className="flex items-center gap-3  bg-blue-gray-800"
+              size="sm"
+            >
+              <BookPlus />
+            </Button>
+            <Button
+              className="flex items-center gap-3  bg-blue-gray-800"
+              size="sm"
+            >
+              <BookType />
+            </Button>
+            <Button
+              className="flex items-center gap-3  bg-blue-gray-800"
+              size="sm"
+            >
+              <BookX />
+            </Button>
+            <Button
+              className="flex items-center gap-3  bg-blue-gray-800"
+              size="sm"
+            >
+              <RotateCw />
+            </Button>
             <Button
               variant="outlined"
               size="sm"
@@ -71,13 +108,6 @@ const BooksTable = () => {
               }}
             >
               {isViewMoreOn ? "view less" : "view more"}
-            </Button>
-            <Button
-              className="flex items-center gap-3  bg-blue-gray-800"
-              size="sm"
-            >
-              <BookPlus />
-              Add Books
             </Button>
           </div>
         </div>
@@ -182,20 +212,54 @@ const BooksTable = () => {
                           <div className="flex items-center gap-3">
                             <Avatar src={thumbnailUrl} alt={title} size="xl" />
                             <div className="flex flex-col">
-                              <Typography
-                                variant="small"
-                                color="blue-gray"
-                                className="font-normal"
-                              >
-                                {title}
-                              </Typography>
-                              <Typography
-                                variant="small"
-                                color="blue-gray"
-                                className="my-1 line-clamp-1 w-96 font-normal opacity-70"
-                              >
-                                {authorsString}
-                              </Typography>
+                              {/* If editModeOnFor contains key and id the input is displayed else Title  */}
+                              {editModeOnFor.id === _id &&
+                              editModeOnFor.key === "title" ? (
+                                <Input
+                                  label="Title"
+                                  value={title}
+                                  onMouseLeave={() =>
+                                    handleEditModeToggle("div")
+                                  }
+                                />
+                              ) : (
+                                <Typography
+                                  variant="small"
+                                  color="blue-gray"
+                                  className="font-normal"
+                                  onClick={() =>
+                                    handleEditModeToggle("input", _id, "title")
+                                  }
+                                >
+                                  {title}
+                                </Typography>
+                              )}
+                              {editModeOnFor.id === _id &&
+                              editModeOnFor.key === "authors" ? (
+                                <Input
+                                  label="Author"
+                                  value={authorsString}
+                                  onMouseOut={() => handleEditModeToggle("div")}
+                                />
+                              ) : (
+                                <Typography
+                                  variant="small"
+                                  color="blue-gray"
+                                  className="my-1 line-clamp-1 w-96 font-normal opacity-70"
+                                  onClick={() => {
+                                    setEditModeOnFor({
+                                      ...editModeOnFor,
+                                      key: "authors",
+                                      id: _id,
+                                    });
+                                  }}
+                                  onBlur={() => {}}
+                                >
+                                  {authorsString}
+                                </Typography>
+                              )}
+
+                              {/* <Input label="Author" value={authorsString} /> */}
                             </div>
                           </div>
                         </td>
@@ -206,7 +270,9 @@ const BooksTable = () => {
                               color="blue-gray"
                               className="font-normal"
                             >
-                              {formatDate(publishedDate.$date)}
+                              {publishedDate?.$date
+                                ? formatDate(publishedDate.$date)
+                                : "Missing"}
                             </Typography>
                             <Typography
                               variant="small"

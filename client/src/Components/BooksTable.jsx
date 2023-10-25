@@ -30,17 +30,16 @@ import {
   IconButton,
   Tooltip,
   Checkbox,
+  Textarea,
 } from "@material-tailwind/react";
-import { useRef } from "react";
 
-// ------------ Components Starts here -----------------
-
+/**
+ * Represents a table component for displaying books.
+ * @returns The BooksTable component.
+ */
 const BooksTable = () => {
   const [displayedBookData, setDisplayedBookData] = useState(booksData);
-
-  // Pagination and Page Info
   const [isViewMoreOn, setIsViewMoreOn] = useState(false);
-
   const itemsPerPage = isViewMoreOn ? displayedBookData.length : 5;
   const [currentPage, setCurrentPage] = useState(1);
   const lastPage = Math.ceil(displayedBookData.length / itemsPerPage) || 1;
@@ -61,6 +60,7 @@ const BooksTable = () => {
       setEditModeOnFor({ ...editModeOnFor, id: null, key: null });
     }
   };
+
   return (
     <Card className="h-full w-full">
       <CardHeader floated={false} shadow={false} className="rounded-none">
@@ -73,6 +73,7 @@ const BooksTable = () => {
               See information about all books
             </Typography>
           </div>
+
           {/* Action Buttons  */}
           <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
             <Button
@@ -164,14 +165,12 @@ const BooksTable = () => {
                     className="flex items-center justify-between gap-2 font-normal leading-none opacity-70"
                   >
                     {head}{" "}
-                    {index !== tableHead.length - 1 && (
-                      <ChevronUpDownIcon strokeWidth={2} className="h-4 w-4" />
-                    )}
                   </Typography>
                 </th>
               ))}
             </tr>
           </thead>
+
           {/* Table Body  */}
           <tbody>
             {displayedBookData.length !== 0 ? (
@@ -208,11 +207,13 @@ const BooksTable = () => {
                             className="h-6 w-6 rounded-full border-gray-900/20 bg-gray-900/10 transition-all hover:scale-105 hover:before:opacity-0"
                           />
                         </td>
-                        <td className={classes}>
+
+                        {/* Title and Authors  */}
+                        <td className={" max-w-sm p-4"}>
                           <div className="flex items-center gap-3">
                             <Avatar src={thumbnailUrl} alt={title} size="xl" />
-                            <div className="flex flex-col">
-                              {/* If editModeOnFor contains key and id the input is displayed else Title  */}
+                            <div className="mx-2 flex w-8/12 flex-col">
+                              {/* Title   */}
                               {editModeOnFor.id === _id &&
                               editModeOnFor.key === "title" ? (
                                 <Input
@@ -226,7 +227,7 @@ const BooksTable = () => {
                                 <Typography
                                   variant="small"
                                   color="blue-gray"
-                                  className="font-normal"
+                                  className="cursor-pointer font-normal"
                                   onClick={() =>
                                     handleEditModeToggle("input", _id, "title")
                                   }
@@ -234,9 +235,12 @@ const BooksTable = () => {
                                   {title}
                                 </Typography>
                               )}
+
+                              {/* Authors  */}
                               {editModeOnFor.id === _id &&
                               editModeOnFor.key === "authors" ? (
                                 <Input
+                                  variant="small"
                                   label="Author"
                                   value={authorsString}
                                   onMouseOut={() => handleEditModeToggle("div")}
@@ -245,7 +249,7 @@ const BooksTable = () => {
                                 <Typography
                                   variant="small"
                                   color="blue-gray"
-                                  className="my-1 line-clamp-1 w-96 font-normal opacity-70"
+                                  className="cursor-pointer"
                                   onClick={() => {
                                     setEditModeOnFor({
                                       ...editModeOnFor,
@@ -253,27 +257,52 @@ const BooksTable = () => {
                                       id: _id,
                                     });
                                   }}
-                                  onBlur={() => {}}
                                 >
                                   {authorsString}
                                 </Typography>
                               )}
-
-                              {/* <Input label="Author" value={authorsString} /> */}
                             </div>
                           </div>
+
+                          {/* Published Date and ISBN  */}
                         </td>
-                        <td className={classes}>
+                        <td className=" w-72 p-4">
                           <div className="flex flex-col">
-                            <Typography
-                              variant="small"
-                              color="blue-gray"
-                              className="font-normal"
-                            >
-                              {publishedDate?.$date
-                                ? formatDate(publishedDate.$date)
-                                : "Missing"}
-                            </Typography>
+                            {editModeOnFor.id === _id &&
+                            editModeOnFor.key === "publishedDate" ? (
+                              <Input
+                                type="date"
+                                variant="small"
+                                label="Published Date"
+                                value={publishedDate?.$date}
+                                onMouseOut={() => handleEditModeToggle("div")}
+                              />
+                            ) : (
+                              <Typography
+                                variant="small"
+                                color="blue-gray"
+                                className="cursor-pointer font-normal"
+                                onClick={() => {
+                                  setEditModeOnFor({
+                                    ...editModeOnFor,
+                                    key: "publishedDate",
+                                    id: _id,
+                                  });
+                                }}
+                              >
+                                {publishedDate?.$date ? (
+                                  formatDate(publishedDate.$date)
+                                ) : (
+                                  <Chip
+                                    variant="small"
+                                    color="purple"
+                                    value="Missing"
+                                    className=" my-2 w-20 rounded-md text-center"
+                                  />
+                                )}
+                              </Typography>
+                            )}
+
                             <Typography
                               variant="small"
                               color="blue-gray"
@@ -297,14 +326,46 @@ const BooksTable = () => {
                             />
                           </div>
                         </td>
+
+                        {/* Short Description  */}
                         <td className={classes}>
-                          <Typography
-                            variant="small"
-                            color="blue-gray"
-                            className="line-clamp-1 w-96 font-normal"
-                          >
-                            {shortDescription}
-                          </Typography>
+                          {editModeOnFor.id === _id &&
+                          editModeOnFor.key === "shortDescription" ? (
+                            <Textarea
+                              variant="outlined"
+                              label="Description"
+                              value={shortDescription}
+                              onMouseOut={() => handleEditModeToggle("div")}
+                            />
+                          ) : (
+                            <Typography
+                              variant="small"
+                              color="blue-gray"
+                              className={
+                                shortDescription
+                                  ? "line-clamp-1 w-96 cursor-pointer font-normal"
+                                  : " line-clamp-1 w-96 cursor-pointer text-center text-sm font-normal text-cyan-800"
+                              }
+                              onClick={() => {
+                                setEditModeOnFor({
+                                  ...editModeOnFor,
+                                  key: "shortDescription",
+                                  id: _id,
+                                });
+                              }}
+                            >
+                              {shortDescription ? (
+                                shortDescription
+                              ) : (
+                                <Chip
+                                  variant="small"
+                                  color="purple"
+                                  value="Missing"
+                                  className=" m-2 mx-auto w-20 rounded-md text-center"
+                                />
+                              )}
+                            </Typography>
+                          )}
                         </td>
                       </tr>
                     );

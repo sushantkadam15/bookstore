@@ -1,7 +1,7 @@
 import Fuse from "fuse.js";
 
 //  Table headers for the book table.
-export const tableHead = ["", "Title", "Function", "Status", "Description"];
+export const tableHead = ["", "Title", "Date", "Status", "Description"];
 
 //  Tabs for filtering books.
 export const tabs = [

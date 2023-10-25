@@ -3,7 +3,7 @@ import NavBar from "./Components/NavBar";
 
 const App = () => {
   return (
-    <section className="mx-auto max-w-screen-2xl">
+    <section className=" mx-auto max-w-7xl">
       <NavBar />
       <BooksTable />
     </section>

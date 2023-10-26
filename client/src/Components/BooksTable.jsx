@@ -1,12 +1,9 @@
-import booksData from "../Seed Data/amazon.books.json";
-import { useState } from "react";
-import {
-  MagnifyingGlassIcon,
-  ChevronUpDownIcon,
-} from "@heroicons/react/24/outline";
-import { PencilIcon } from "@heroicons/react/24/solid";
-import { BookOpen, BookPlus, BookType, BookX, RotateCw } from "lucide-react";
+// import booksData from "../Seed Data/amazon.books.json";
+import { useEffect, useState } from "react";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { BookPlus, BookX, RotateCw } from "lucide-react";
 import { Frown } from "lucide-react";
+import axios from "axios";
 import {
   tableHead,
   tabs,
@@ -27,8 +24,6 @@ import {
   TabsHeader,
   Tab,
   Avatar,
-  IconButton,
-  Tooltip,
   Checkbox,
   Textarea,
 } from "@material-tailwind/react";
@@ -38,7 +33,8 @@ import {
  * @returns The BooksTable component.
  */
 const BooksTable = () => {
-  const [displayedBookData, setDisplayedBookData] = useState(booksData);
+  const [booksData, setBooksData] = useState([]);
+  const [displayedBookData, setDisplayedBookData] = useState([]);
   const [isViewMoreOn, setIsViewMoreOn] = useState(false);
   const itemsPerPage = isViewMoreOn ? displayedBookData.length : 5;
   const [currentPage, setCurrentPage] = useState(1);
@@ -52,11 +48,28 @@ const BooksTable = () => {
     key: null,
   });
 
-  const handleEditModeToggle = (elementToActive, id, key) => {
-    if (elementToActive === "input") {
+  const BASE_URL = "http://localhost:3500/";
+
+  // Function to fetch book data from the specified BASE_URL
+  async function fetchBooksData() {
+    const response = await axios
+      .get(`${BASE_URL}books`)
+      .then((res) => res.data);
+
+    setBooksData(response);
+    setDisplayedBookData(response);
+  }
+
+  // Trigger the data fetching when the component mounts
+  useEffect(() => {
+    fetchBooksData();
+  });
+
+  // Function to toggle edit mode for a specific element
+  const handleEditModeToggle = (elementToActivate, id, key) => {
+    if (elementToActivate === "input") {
       setEditModeOnFor({ ...editModeOnFor, id: id, key: key });
     } else {
-      console.log("onl");
       setEditModeOnFor({ ...editModeOnFor, id: null, key: null });
     }
   };
@@ -81,12 +94,6 @@ const BooksTable = () => {
               size="sm"
             >
               <BookPlus />
-            </Button>
-            <Button
-              className="flex items-center gap-3  bg-blue-gray-800"
-              size="sm"
-            >
-              <BookType />
             </Button>
             <Button
               className="flex items-center gap-3  bg-blue-gray-800"
@@ -274,7 +281,7 @@ const BooksTable = () => {
                                 type="date"
                                 variant="small"
                                 label="Published Date"
-                                value={publishedDate?.$date}
+                                value={publishedDate}
                                 onMouseOut={() => handleEditModeToggle("div")}
                               />
                             ) : (
@@ -290,8 +297,8 @@ const BooksTable = () => {
                                   });
                                 }}
                               >
-                                {publishedDate?.$date ? (
-                                  formatDate(publishedDate.$date)
+                                {publishedDate ? (
+                                  formatDate(publishedDate)
                                 ) : (
                                   <Chip
                                     variant="small"

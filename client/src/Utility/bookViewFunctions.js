@@ -59,6 +59,7 @@ export const filterBooksBySearch = (
   // Configure search options for fuzzy search.
   const fuseOptions = {
     keys: ["title"],
+    threshold: 0.3,
   };
 
   if (searchQuery) {

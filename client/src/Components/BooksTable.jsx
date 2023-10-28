@@ -21,7 +21,6 @@ import {
   Checkbox,
   Textarea,
   Spinner,
-  input,
 } from "@material-tailwind/react";
 
 /**
@@ -154,20 +153,9 @@ const BooksTable = () => {
     }
   };
 
-  //
-  const formatDate = (inputDate) => {
-    const date = new Date(inputDate);
-    const options = {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    };
-    const formattedDate = date.toLocaleDateString("en-US", options);
-    return formattedDate;
-  };
 
 
-  const updateBookInfo = (bookObjectId, key, newValue) => {
+  const handleUpdateBookInfo = (bookObjectId, key, newValue) => {
 
     // Use functional state update to avoid mutating state
     setDisplayedBooks(prevBooks => prevBooks.map(book => {
@@ -177,11 +165,43 @@ const BooksTable = () => {
       return book;
     }));
 
-    axios.put(`${BASE_URL}books`, { [key]: newValue, id: bookObjectId })
-      .then((res) => console.log(res))
+    const isUpdateSuccessFull = axios.put(`${BASE_URL}books`, { [key]: newValue, id: bookObjectId })
+      .then((res) => true)
       .catch((err) => console.log(err));
+  }
 
-    // setBooks(displayedBooks)
+
+  // Formats a date for display and input and max value.
+
+  const formatDate = (inputDate) => {
+    const date = new Date(inputDate);
+
+    // Format the date for display as "October 9, 2023"
+    const displayDateFormat = new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    }).format(date);
+
+    // Format the date for input as "2023-10-14"
+    const inputDateFormat = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+    // Set the max date for user input to today
+    const today = new Date();
+    const maxDateFormat = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+    return {
+      displayDateFormat,
+      inputDateFormat,
+      maxDateFormat
+    };
+  }
+
+
+  function convertUserInputToBackendDate(userInput) {
+    const inputDate = new Date(userInput);
+    const backendFormat = inputDate.toISOString();
+    return backendFormat;
   }
 
 
@@ -286,7 +306,7 @@ const BooksTable = () => {
             {/* Spinner is displayed until the data loads  */}
             {isLoading ? (
               <tr className=" h-96">
-                <td colSpan={5} className=" text-center border border-brown-900">
+                <td colSpan={5} className=" text-center">
                   <Spinner className=" h-32 w-32 mx-auto" />
                 </td>
               </tr>
@@ -312,8 +332,11 @@ const BooksTable = () => {
                         index,
                       ) => {
                         const isLast = index === displayedBooks.length - 1;
+
                         const authorsString =
-                          authors && authors.toString().replace(",", ", ");
+                          authors && authors.join(", ");
+
+                        const { displayDateFormat, inputDateFormat, maxDateFormat } = formatDate(publishedDate)
 
                         const classes = isLast
                           ? "p-4"
@@ -342,7 +365,7 @@ const BooksTable = () => {
                                       onMouseLeave={() =>
                                         handleEditModeToggle("div")
                                       }
-                                      onChange={(e) => updateBookInfo(_id, "title", e.target.value)}
+                                      onChange={(e) => handleUpdateBookInfo(_id, "title", e.target.value)}
 
                                     />
                                   ) : (
@@ -364,6 +387,14 @@ const BooksTable = () => {
                                       label="Author"
                                       value={authorsString}
                                       onMouseOut={() => handleEditModeToggle("div")}
+                                      onChange={(e) => {
+                                        const newValueString = e.target.value;
+
+                                        // Splits the string by ',' with optional spaces and converts it into an array
+                                        const newValueArray = newValueString.split(/\s*,\s*|,/);
+                                        handleUpdateBookInfo(_id, "authors", newValueArray)
+                                      }}
+
                                     />
                                   ) : (
                                     <Typography
@@ -392,10 +423,13 @@ const BooksTable = () => {
                                   <Input
                                     type="date"
                                     label="Published Date"
-                                    value={publishedDate}
+                                    max={maxDateFormat}
+                                    value={inputDateFormat}
                                     onMouseOut={() => handleEditModeToggle("div")}
                                     onChange={(e) => {
-                                      console.log(e.target.value)
+                                      const formattedDate = convertUserInputToBackendDate(e.target.value)
+                                      handleUpdateBookInfo(_id, "publishedDate", formattedDate)
+
                                     }}
                                   />
                                 ) : (
@@ -411,7 +445,7 @@ const BooksTable = () => {
                                     }}
                                   >
                                     {publishedDate ? (
-                                      formatDate(publishedDate)
+                                      displayDateFormat
                                     ) : (
                                       <Chip
                                         color="purple"

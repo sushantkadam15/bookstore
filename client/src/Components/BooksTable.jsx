@@ -1,5 +1,5 @@
 // import booksData from "../Seed Data/amazon.books.json";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { BookPlus, BookX, RotateCw } from "lucide-react";
 import { Frown } from "lucide-react";
@@ -33,46 +33,83 @@ import {
  * @returns The BooksTable component.
  */
 const BooksTable = () => {
-  const [booksData, setBooksData] = useState([]);
-  const [displayedBookData, setDisplayedBookData] = useState([]);
-  const [isViewMoreOn, setIsViewMoreOn] = useState(false);
-  const itemsPerPage = isViewMoreOn ? displayedBookData.length : 5;
+  // State variables for books and displayed books
+  const [books, setBooks] = useState([]);
+  const [displayedBooks, setDisplayedBooks] = useState([]);
+  const [isViewMoreEnabled, setIsViewMoreEnabled] = useState(false);
+
+  // Calculate the number of items per page and track the current page
+  const itemsPerPage = isViewMoreEnabled ? displayedBooks.length : 5;
   const [currentPage, setCurrentPage] = useState(1);
-  const lastPage = Math.ceil(displayedBookData.length / itemsPerPage) || 1;
-  const itemStartIndex = (currentPage - 1) * itemsPerPage;
-  const itemEndIndex = itemStartIndex + itemsPerPage;
+  const lastPage = Math.ceil(displayedBooks.length / itemsPerPage) || 1;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+
+  // State variables for selected tab and search query
   const [selectedTab, setSelectedTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [editModeOnFor, setEditModeOnFor] = useState({
+
+  // State variable for edit mode
+  const [editMode, setEditMode] = useState({
     id: null,
     key: null,
   });
 
+  // Base URL for data fetching
   const BASE_URL = "http://localhost:3500/";
 
   // Function to fetch book data from the specified BASE_URL
-  async function fetchBooksData() {
+  async function fetchBooks() {
     const response = await axios
       .get(`${BASE_URL}books`)
       .then((res) => res.data);
 
-    setBooksData(response);
-    setDisplayedBookData(response);
+    // Update the books and displayed books
+    setBooks(response);
+    setDisplayedBooks(response);
   }
+
+  // Memoized filter for published books
+  const publishedBooks = useMemo(() => {
+    const published = books.filter(
+      (book) => book.status === "PUBLISH",
+    );
+    return published;
+  }, [books]);
+
+  // Memoized filter for books with unknown published date
+  const booksWithUnknownPublishedDate = useMemo(() => {
+    const unknownPublishedDate = books.filter(
+      (book) => !book.hasOwnProperty("status") || book.status !== "PUBLISH",
+    );
+    return unknownPublishedDate;
+  }, [books]);
+
+  // Function to handle tab changes and update displayed books
+  const handleTabChange = (value) => {
+    if (value === "published") {
+      setDisplayedBooks(publishedBooks);
+    } else if (value === "unknown") {
+      setDisplayedBooks(booksWithUnknownPublishedDate);
+    } else {
+      setDisplayedBooks(books);
+    }
+  };
 
   // Trigger the data fetching when the component mounts
   useEffect(() => {
-    fetchBooksData();
-  });
+    fetchBooks();
+  }, []);
 
   // Function to toggle edit mode for a specific element
   const handleEditModeToggle = (elementToActivate, id, key) => {
     if (elementToActivate === "input") {
-      setEditModeOnFor({ ...editModeOnFor, id: id, key: key });
+      setEditMode({ ...editMode, id: id, key: key });
     } else {
-      setEditModeOnFor({ ...editModeOnFor, id: null, key: null });
+      setEditMode({ ...editMode, id: null, key: null });
     }
   };
+
 
   return (
     <Card className="h-full w-full">
@@ -111,11 +148,11 @@ const BooksTable = () => {
               variant="outlined"
               size="sm"
               onClick={() => {
-                setIsViewMoreOn(!isViewMoreOn);
+                setIsViewMoreEnabled(!isViewMoreEnabled);
                 setCurrentPage(1);
               }}
             >
-              {isViewMoreOn ? "view less" : "view more"}
+              {isViewMoreEnabled ? "view less" : "view more"}
             </Button>
           </div>
         </div>
@@ -127,9 +164,8 @@ const BooksTable = () => {
                   key={value}
                   value={value}
                   onClick={() => {
-                    setSearchQuery("");
-                    setSelectedTab(value);
-                    filterBooksByTab(value, setDisplayedBookData, booksData);
+                    setSelectedTab(value)
+                    handleTabChange(value)
                     setCurrentPage(1);
                   }}
                 >
@@ -146,9 +182,9 @@ const BooksTable = () => {
               onChange={(e) => {
                 setSearchQuery(e.target.value);
                 filterBooksBySearch(
-                  booksData,
+                  books,
                   e.target.value,
-                  setDisplayedBookData,
+                  setDisplayedBooks,
                   selectedTab,
                 );
                 setCurrentPage(1);
@@ -180,9 +216,9 @@ const BooksTable = () => {
 
           {/* Table Body  */}
           <tbody>
-            {displayedBookData.length !== 0 ? (
-              displayedBookData
-                .slice(itemStartIndex, itemEndIndex)
+            {displayedBooks.length !== 0 ? (
+              displayedBooks
+                .slice(startIndex, endIndex)
                 .map(
                   (
                     {
@@ -198,7 +234,7 @@ const BooksTable = () => {
                     },
                     index,
                   ) => {
-                    const isLast = index === displayedBookData.length - 1;
+                    const isLast = index === displayedBooks.length - 1;
                     const authorsString =
                       authors && authors.toString().replace(",", ", ");
 
@@ -218,11 +254,11 @@ const BooksTable = () => {
                         {/* Title and Authors  */}
                         <td className={" max-w-sm p-4"}>
                           <div className="flex items-center gap-3">
-                            <Avatar src={thumbnailUrl} alt={title} size="xl" />
+                            <Avatar src={thumbnailUrl} alt={title} size="xl" loading="lazy" />
                             <div className="mx-2 flex w-8/12 flex-col">
                               {/* Title   */}
-                              {editModeOnFor.id === _id &&
-                              editModeOnFor.key === "title" ? (
+                              {editMode.id === _id &&
+                                editMode.key === "title" ? (
                                 <Input
                                   label="Title"
                                   value={title}
@@ -244,8 +280,8 @@ const BooksTable = () => {
                               )}
 
                               {/* Authors  */}
-                              {editModeOnFor.id === _id &&
-                              editModeOnFor.key === "authors" ? (
+                              {editMode.id === _id &&
+                                editMode.key === "authors" ? (
                                 <Input
                                   variant="small"
                                   label="Author"
@@ -258,8 +294,8 @@ const BooksTable = () => {
                                   color="blue-gray"
                                   className="cursor-pointer"
                                   onClick={() => {
-                                    setEditModeOnFor({
-                                      ...editModeOnFor,
+                                    setEditMode({
+                                      ...editMode,
                                       key: "authors",
                                       id: _id,
                                     });
@@ -275,8 +311,8 @@ const BooksTable = () => {
                         </td>
                         <td className=" w-72 p-4">
                           <div className="flex flex-col">
-                            {editModeOnFor.id === _id &&
-                            editModeOnFor.key === "publishedDate" ? (
+                            {editMode.id === _id &&
+                              editMode.key === "publishedDate" ? (
                               <Input
                                 type="date"
                                 variant="small"
@@ -290,8 +326,8 @@ const BooksTable = () => {
                                 color="blue-gray"
                                 className="cursor-pointer font-normal"
                                 onClick={() => {
-                                  setEditModeOnFor({
-                                    ...editModeOnFor,
+                                  setEditMode({
+                                    ...editMode,
                                     key: "publishedDate",
                                     id: _id,
                                   });
@@ -336,8 +372,8 @@ const BooksTable = () => {
 
                         {/* Short Description  */}
                         <td className={classes}>
-                          {editModeOnFor.id === _id &&
-                          editModeOnFor.key === "shortDescription" ? (
+                          {editMode.id === _id &&
+                            editMode.key === "shortDescription" ? (
                             <Textarea
                               variant="outlined"
                               label="Description"
@@ -354,8 +390,8 @@ const BooksTable = () => {
                                   : " line-clamp-1 w-96 cursor-pointer text-center text-sm font-normal text-cyan-800"
                               }
                               onClick={() => {
-                                setEditModeOnFor({
-                                  ...editModeOnFor,
+                                setEditMode({
+                                  ...editMode,
                                   key: "shortDescription",
                                   id: _id,
                                 });

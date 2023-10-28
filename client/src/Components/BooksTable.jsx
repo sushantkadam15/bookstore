@@ -28,21 +28,20 @@ import {
  * @returns The BooksTable component.
  */
 const BooksTable = () => {
-  // State variable for loading
-  const [isLoading, setIsLoading] = useState(true)
-  // State variables for books and displayed books
+  // State variables
+  const [isLoading, setIsLoading] = useState(true);
   const [books, setBooks] = useState([]);
   const [displayedBooks, setDisplayedBooks] = useState([]);
   const [isViewMoreEnabled, setIsViewMoreEnabled] = useState(false);
 
-  // Calculate the number of items per page and track the current page
+  // Pagination variables
   const itemsPerPage = isViewMoreEnabled ? displayedBooks.length : 5;
   const [currentPage, setCurrentPage] = useState(1);
   const lastPage = Math.ceil(displayedBooks.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
 
-  // State variables for selected tab and search query
+  // Tab and search variables
   const [selectedTab, setSelectedTab] = useState("all");
   const tableHead = ["", "Title", "Date", "Status", "Description"];
   const tabs = [
@@ -61,41 +60,34 @@ const BooksTable = () => {
   ];
   const [searchQuery, setSearchQuery] = useState("");
 
-
-  // State variable for edit mode
+  // Edit mode and textarea height
   const [editMode, setEditMode] = useState({
     id: null,
     key: null,
   });
-
 
   // Base URL for data fetching
   const BASE_URL = "http://localhost:3500/";
 
   // Function to fetch book data from the specified BASE_URL
   async function fetchBooks() {
-    const response = await axios
-      .get(`${BASE_URL}books`)
-      .then((res) => res.data);
+    const response = await axios.get(`${BASE_URL}books`).then((res) => res.data);
 
     // Update the books and displayed books
     setBooks(response);
     setDisplayedBooks(response);
-    setIsLoading(false)
+    setIsLoading(false);
   }
 
-  // Memoized filter for published books
+  // Memoized filters
   const publishedBooks = useMemo(() => {
-    const published = books.filter(
-      (book) => book.status === "PUBLISH",
-    );
+    const published = books.filter((book) => book.status === "PUBLISH");
     return published;
   }, [books]);
 
-  // Memoized filter for books with unknown published date
   const booksWithUnknownPublishedDate = useMemo(() => {
     const unknownPublishedDate = books.filter(
-      (book) => !book.hasOwnProperty("status") || book.status !== "PUBLISH",
+      (book) => !book.hasOwnProperty("status") || book.status !== "PUBLISH"
     );
     return unknownPublishedDate;
   }, [books]);
@@ -116,7 +108,6 @@ const BooksTable = () => {
     fetchBooks();
   }, []);
 
-
   // Function to perform a search on displayed books
   const handleSearch = useCallback((searchQuery) => {
     let filteredBooks;
@@ -129,7 +120,7 @@ const BooksTable = () => {
     }
     if (searchQuery === "") {
       setDisplayedBooks(filteredBooks);
-      return
+      return;
     }
     const searchOptions = {
       keys: ["title"],
@@ -138,11 +129,9 @@ const BooksTable = () => {
 
     const fuse = new Fuse(filteredBooks, searchOptions);
     let searchResult = fuse.search(searchQuery);
-    searchResult = searchResult.map((foundResults) => foundResults.item)
+    searchResult = searchResult.map((foundResults) => foundResults.item);
     setDisplayedBooks(searchResult);
   }, [selectedTab, publishedBooks, booksWithUnknownPublishedDate, books]);
-
-
 
   // Function to toggle edit mode for a specific element
   const handleEditModeToggle = (elementToActivate, id, key) => {
@@ -153,57 +142,73 @@ const BooksTable = () => {
     }
   };
 
-
-
+  // Function to update book information
   const handleUpdateBookInfo = (bookObjectId, key, newValue) => {
-
     // Use functional state update to avoid mutating state
-    setDisplayedBooks(prevBooks => prevBooks.map(book => {
-      if (book._id === bookObjectId) {
-        return { ...book, [key]: newValue };
-      }
-      return book;
-    }));
+    setDisplayedBooks((prevBooks) =>
+      prevBooks.map((book) => {
+        if (book._id === bookObjectId) {
+          return { ...book, [key]: newValue };
+        }
+        return book;
+      })
+    );
 
-    const isUpdateSuccessFull = axios.put(`${BASE_URL}books`, { [key]: newValue, id: bookObjectId })
+    const isUpdateSuccessful = axios
+      .put(`${BASE_URL}books`, { [key]: newValue, id: bookObjectId })
       .then((res) => true)
       .catch((err) => console.log(err));
-  }
+  };
 
-
-  // Formats a date for display and input and max value.
-
+  // Format a date for display and input
   const formatDate = (inputDate) => {
     const date = new Date(inputDate);
 
     // Format the date for display as "October 9, 2023"
-    const displayDateFormat = new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    const displayDateFormat = new Intl.DateTimeFormat("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     }).format(date);
 
     // Format the date for input as "2023-10-14"
-    const inputDateFormat = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const inputDateFormat = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+      date.getDate()
+    ).padStart(2, "0")}`;
 
     // Set the max date for user input to today
     const today = new Date();
-    const maxDateFormat = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const maxDateFormat = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(
+      today.getDate()
+    ).padStart(2, "0")}`;
 
     return {
       displayDateFormat,
       inputDateFormat,
-      maxDateFormat
+      maxDateFormat,
     };
-  }
+  };
 
-
+  // Function to convert user input to backend date format
   function convertUserInputToBackendDate(userInput) {
     const inputDate = new Date(userInput);
     const backendFormat = inputDate.toISOString();
     return backendFormat;
   }
 
+  // Function to reset data
+  const handleReset = async () => {
+    try {
+      setIsLoading(true);
+      setDisplayedBooks([]);
+      const response = await axios.put(`${BASE_URL}books/reset`);
+      setDisplayedBooks(response.data.books);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
 
   return (
@@ -236,6 +241,7 @@ const BooksTable = () => {
             <Button
               className="flex items-center gap-3  bg-blue-gray-800"
               size="sm"
+              onClick={handleReset}
             >
               <RotateCw />
             </Button>
@@ -343,7 +349,7 @@ const BooksTable = () => {
                           : "p-4 border-b border-blue-gray-50 max-w-96";
 
                         return (
-                          <tr key={index}>
+                          <tr key={_id} className=" h-36">
                             <td>
                               <Checkbox
                                 ripple={false}
@@ -488,6 +494,9 @@ const BooksTable = () => {
                                   label="Description"
                                   value={shortDescription}
                                   onMouseOut={() => handleEditModeToggle("div")}
+                                  onChange={(e) => {
+                                    handleUpdateBookInfo(_id, "shortDescription", e.target.value)
+                                  }}
                                 />
                               ) : (
                                 <Typography

@@ -9,6 +9,6 @@ router
   .put(booksService.updateBook)
   .delete(booksService.deleteBooks);
 
-router.route("/reset").post(booksService.resetBooksDB);
+router.route("/reset").put(booksService.resetBooksDB);
 
 module.exports = router;

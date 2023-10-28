@@ -161,20 +161,26 @@ const BooksTable = () => {
   };
 
   // Format a date for display and input
+  let displayDateFormat
+  let inputDateFormat
   const formatDate = (inputDate) => {
-    const date = new Date(inputDate);
+    if (inputDate) {
+      const date = new Date(inputDate);
 
-    // Format the date for display as "October 9, 2023"
-    const displayDateFormat = new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }).format(date);
+      // Format the date for display as "October 9, 2023"
+      displayDateFormat = new Intl.DateTimeFormat("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      }).format(date);
 
-    // Format the date for input as "2023-10-14"
-    const inputDateFormat = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
-      date.getDate()
-    ).padStart(2, "0")}`;
+      // Format the date for input as "2023-10-14"
+      inputDateFormat = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+        date.getDate()
+      ).padStart(2, "0")}`;
+
+    }
+
 
     // Set the max date for user input to today
     const today = new Date();

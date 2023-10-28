@@ -4,13 +4,7 @@ import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { BookPlus, BookX, RotateCw } from "lucide-react";
 import { Frown } from "lucide-react";
 import axios from "axios";
-import {
-  tableHead,
-  tabs,
-  filterBooksBySearch,
-  filterBooksByTab,
-  formatDate,
-} from "../Utility/bookViewFunctions";
+import Fuse from "fuse.js";
 import {
   Card,
   CardHeader,
@@ -26,6 +20,7 @@ import {
   Avatar,
   Checkbox,
   Textarea,
+  Spinner,
 } from "@material-tailwind/react";
 
 /**
@@ -33,6 +28,8 @@ import {
  * @returns The BooksTable component.
  */
 const BooksTable = () => {
+  // State variable for loading
+  const [isLoading, setIsLoading] = useState(true)
   // State variables for books and displayed books
   const [books, setBooks] = useState([]);
   const [displayedBooks, setDisplayedBooks] = useState([]);
@@ -47,13 +44,30 @@ const BooksTable = () => {
 
   // State variables for selected tab and search query
   const [selectedTab, setSelectedTab] = useState("all");
+  const tableHead = ["", "Title", "Date", "Status", "Description"];
+  const tabs = [
+    {
+      label: "All",
+      value: "all",
+    },
+    {
+      label: "Published",
+      value: "published",
+    },
+    {
+      label: "Unknown",
+      value: "unknown",
+    },
+  ];
   const [searchQuery, setSearchQuery] = useState("");
+
 
   // State variable for edit mode
   const [editMode, setEditMode] = useState({
     id: null,
     key: null,
   });
+
 
   // Base URL for data fetching
   const BASE_URL = "http://localhost:3500/";
@@ -67,6 +81,7 @@ const BooksTable = () => {
     // Update the books and displayed books
     setBooks(response);
     setDisplayedBooks(response);
+    // setIsLoading(false)
   }
 
   // Memoized filter for published books
@@ -101,6 +116,34 @@ const BooksTable = () => {
     fetchBooks();
   }, []);
 
+
+  // Function to perform a search on displayed books
+  const handleSearch = useCallback((searchQuery) => {
+    let filteredBooks;
+    if (selectedTab === "published") {
+      filteredBooks = publishedBooks;
+    } else if (selectedTab === "unknown") {
+      filteredBooks = booksWithUnknownPublishedDate;
+    } else {
+      filteredBooks = books;
+    }
+    if (searchQuery === "") {
+      setDisplayedBooks(filteredBooks);
+      return
+    }
+    const searchOptions = {
+      keys: ["title"],
+      threshold: 0.3,
+    };
+
+    const fuse = new Fuse(filteredBooks, searchOptions);
+    let searchResult = fuse.search(searchQuery);
+    searchResult = searchResult.map((foundResults) => foundResults.item)
+    setDisplayedBooks(searchResult);
+  }, [selectedTab, publishedBooks, booksWithUnknownPublishedDate, books]);
+
+
+
   // Function to toggle edit mode for a specific element
   const handleEditModeToggle = (elementToActivate, id, key) => {
     if (elementToActivate === "input") {
@@ -110,9 +153,22 @@ const BooksTable = () => {
     }
   };
 
+  //
+  const formatDate = (inputDate) => {
+    const date = new Date(inputDate);
+    const options = {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    };
+    const formattedDate = date.toLocaleDateString("en-US", options);
+    return formattedDate;
+  };
+
+
 
   return (
-    <Card className="h-full w-full">
+    <Card className="h-full w-full min-w-min">
       <CardHeader floated={false} shadow={false} className="rounded-none">
         <div className="mb-8 flex items-center justify-between gap-8">
           <div>
@@ -181,12 +237,7 @@ const BooksTable = () => {
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
-                filterBooksBySearch(
-                  books,
-                  e.target.value,
-                  setDisplayedBooks,
-                  selectedTab,
-                );
+                handleSearch(e.target.value)
                 setCurrentPage(1);
               }}
             />
@@ -213,217 +264,226 @@ const BooksTable = () => {
               ))}
             </tr>
           </thead>
-
-          {/* Table Body  */}
           <tbody>
-            {displayedBooks.length !== 0 ? (
-              displayedBooks
-                .slice(startIndex, endIndex)
-                .map(
-                  (
-                    {
-                      _id,
-                      title,
-                      isbn,
-                      publishedDate,
-                      thumbnailUrl,
-                      shortDescription,
-                      status,
-                      authors,
-                      categories,
-                    },
-                    index,
-                  ) => {
-                    const isLast = index === displayedBooks.length - 1;
-                    const authorsString =
-                      authors && authors.toString().replace(",", ", ");
+            {/* Spinner is displayed until the data loads  */}
+            {isLoading ? (
+              <tr className=" h-96">
+                <td colSpan={5} className=""><Spinner />
+                </td>
+              </tr>
+            ) : (
+              <>
+                {/* Table Body  */}
+                {displayedBooks.length !== 0 ? (
+                  displayedBooks
+                    .slice(startIndex, endIndex)
+                    .map(
+                      (
+                        {
+                          _id,
+                          title,
+                          isbn,
+                          publishedDate,
+                          thumbnailUrl,
+                          shortDescription,
+                          status,
+                          authors,
+                          categories,
+                        },
+                        index,
+                      ) => {
+                        const isLast = index === displayedBooks.length - 1;
+                        const authorsString =
+                          authors && authors.toString().replace(",", ", ");
 
-                    const classes = isLast
-                      ? "p-4"
-                      : "p-4 border-b border-blue-gray-50 max-w-96";
+                        const classes = isLast
+                          ? "p-4"
+                          : "p-4 border-b border-blue-gray-50 max-w-96";
 
-                    return (
-                      <tr key={index}>
-                        <td>
-                          <Checkbox
-                            ripple={false}
-                            className="h-6 w-6 rounded-full border-gray-900/20 bg-gray-900/10 transition-all hover:scale-105 hover:before:opacity-0"
-                          />
-                        </td>
+                        return (
+                          <tr key={index}>
+                            <td>
+                              <Checkbox
+                                ripple={false}
+                                className="h-6 w-6 rounded-full border-gray-900/20 bg-gray-900/10 transition-all hover:scale-105 hover:before:opacity-0"
+                              />
+                            </td>
 
-                        {/* Title and Authors  */}
-                        <td className={" max-w-sm p-4"}>
-                          <div className="flex items-center gap-3">
-                            <Avatar src={thumbnailUrl} alt={title} size="xl" loading="lazy" />
-                            <div className="mx-2 flex w-8/12 flex-col">
-                              {/* Title   */}
-                              {editMode.id === _id &&
-                                editMode.key === "title" ? (
-                                <Input
-                                  label="Title"
-                                  value={title}
-                                  onMouseLeave={() =>
-                                    handleEditModeToggle("div")
-                                  }
-                                />
-                              ) : (
+                            {/* Title and Authors  */}
+                            <td className={" max-w-sm p-4"}>
+                              <div className="flex items-center gap-3">
+                                <Avatar src={thumbnailUrl} alt={title} size="xl" loading="lazy" />
+                                <div className="mx-2 flex w-8/12 flex-col">
+                                  {/* Title   */}
+                                  {editMode.id === _id &&
+                                    editMode.key === "title" ? (
+                                    <Input
+                                      label="Title"
+                                      value={title}
+                                      onMouseLeave={() =>
+                                        handleEditModeToggle("div")
+                                      }
+                                    />
+                                  ) : (
+                                    <Typography
+                                      variant="small"
+                                      color="blue-gray"
+                                      className="cursor-pointer font-normal"
+                                      onClick={() =>
+                                        handleEditModeToggle("input", _id, "title")
+                                      }
+                                    >
+                                      {title}
+                                    </Typography>
+                                  )}
+
+                                  {/* Authors  */}
+                                  {editMode.id === _id &&
+                                    editMode.key === "authors" ? (
+                                    <Input
+                                      variant="small"
+                                      label="Author"
+                                      value={authorsString}
+                                      onMouseOut={() => handleEditModeToggle("div")}
+                                    />
+                                  ) : (
+                                    <Typography
+                                      variant="small"
+                                      color="blue-gray"
+                                      className="cursor-pointer"
+                                      onClick={() => {
+                                        setEditMode({
+                                          ...editMode,
+                                          key: "authors",
+                                          id: _id,
+                                        });
+                                      }}
+                                    >
+                                      {authorsString}
+                                    </Typography>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Published Date and ISBN  */}
+                            </td>
+                            <td className=" w-72 p-4">
+                              <div className="flex flex-col">
+                                {editMode.id === _id &&
+                                  editMode.key === "publishedDate" ? (
+                                  <Input
+                                    type="date"
+                                    variant="small"
+                                    label="Published Date"
+                                    value={publishedDate}
+                                    onMouseOut={() => handleEditModeToggle("div")}
+                                  />
+                                ) : (
+                                  <Typography
+                                    variant="small"
+                                    color="blue-gray"
+                                    className="cursor-pointer font-normal"
+                                    onClick={() => {
+                                      setEditMode({
+                                        ...editMode,
+                                        key: "publishedDate",
+                                        id: _id,
+                                      });
+                                    }}
+                                  >
+                                    {publishedDate ? (
+                                      formatDate(publishedDate)
+                                    ) : (
+                                      <Chip
+                                        variant="small"
+                                        color="purple"
+                                        value="Missing"
+                                        className=" my-2 w-20 rounded-md text-center"
+                                      />
+                                    )}
+                                  </Typography>
+                                )}
+
                                 <Typography
                                   variant="small"
                                   color="blue-gray"
-                                  className="cursor-pointer font-normal"
-                                  onClick={() =>
-                                    handleEditModeToggle("input", _id, "title")
-                                  }
+                                  className="font-normal opacity-70"
                                 >
-                                  {title}
+                                  {`ISBN: ${isbn}`}
                                 </Typography>
-                              )}
+                              </div>
+                            </td>
+                            <td className={classes}>
+                              <div className="w-max">
+                                <Chip
+                                  variant="ghost"
+                                  size="sm"
+                                  value={
+                                    status === "PUBLISH" ? "Published" : "Unknown"
+                                  }
+                                  color={
+                                    status === "PUBLISH" ? "green" : "blue-gray"
+                                  }
+                                />
+                              </div>
+                            </td>
 
-                              {/* Authors  */}
+                            {/* Short Description  */}
+                            <td className={classes}>
                               {editMode.id === _id &&
-                                editMode.key === "authors" ? (
-                                <Input
-                                  variant="small"
-                                  label="Author"
-                                  value={authorsString}
+                                editMode.key === "shortDescription" ? (
+                                <Textarea
+                                  variant="outlined"
+                                  label="Description"
+                                  value={shortDescription}
                                   onMouseOut={() => handleEditModeToggle("div")}
                                 />
                               ) : (
                                 <Typography
                                   variant="small"
                                   color="blue-gray"
-                                  className="cursor-pointer"
+                                  className={
+                                    shortDescription
+                                      ? "line-clamp-1 w-96 cursor-pointer font-normal"
+                                      : " line-clamp-1 w-96 cursor-pointer text-center text-sm font-normal text-cyan-800"
+                                  }
                                   onClick={() => {
                                     setEditMode({
                                       ...editMode,
-                                      key: "authors",
+                                      key: "shortDescription",
                                       id: _id,
                                     });
                                   }}
                                 >
-                                  {authorsString}
+                                  {shortDescription ? (
+                                    shortDescription
+                                  ) : (
+                                    <Chip
+                                      variant="small"
+                                      color="purple"
+                                      value="Missing"
+                                      className=" m-2 mx-auto w-20 rounded-md text-center"
+                                    />
+                                  )}
                                 </Typography>
                               )}
-                            </div>
-                          </div>
-
-                          {/* Published Date and ISBN  */}
-                        </td>
-                        <td className=" w-72 p-4">
-                          <div className="flex flex-col">
-                            {editMode.id === _id &&
-                              editMode.key === "publishedDate" ? (
-                              <Input
-                                type="date"
-                                variant="small"
-                                label="Published Date"
-                                value={publishedDate}
-                                onMouseOut={() => handleEditModeToggle("div")}
-                              />
-                            ) : (
-                              <Typography
-                                variant="small"
-                                color="blue-gray"
-                                className="cursor-pointer font-normal"
-                                onClick={() => {
-                                  setEditMode({
-                                    ...editMode,
-                                    key: "publishedDate",
-                                    id: _id,
-                                  });
-                                }}
-                              >
-                                {publishedDate ? (
-                                  formatDate(publishedDate)
-                                ) : (
-                                  <Chip
-                                    variant="small"
-                                    color="purple"
-                                    value="Missing"
-                                    className=" my-2 w-20 rounded-md text-center"
-                                  />
-                                )}
-                              </Typography>
-                            )}
-
-                            <Typography
-                              variant="small"
-                              color="blue-gray"
-                              className="font-normal opacity-70"
-                            >
-                              {`ISBN: ${isbn}`}
-                            </Typography>
-                          </div>
-                        </td>
-                        <td className={classes}>
-                          <div className="w-max">
-                            <Chip
-                              variant="ghost"
-                              size="sm"
-                              value={
-                                status === "PUBLISH" ? "Published" : "Unknown"
-                              }
-                              color={
-                                status === "PUBLISH" ? "green" : "blue-gray"
-                              }
-                            />
-                          </div>
-                        </td>
-
-                        {/* Short Description  */}
-                        <td className={classes}>
-                          {editMode.id === _id &&
-                            editMode.key === "shortDescription" ? (
-                            <Textarea
-                              variant="outlined"
-                              label="Description"
-                              value={shortDescription}
-                              onMouseOut={() => handleEditModeToggle("div")}
-                            />
-                          ) : (
-                            <Typography
-                              variant="small"
-                              color="blue-gray"
-                              className={
-                                shortDescription
-                                  ? "line-clamp-1 w-96 cursor-pointer font-normal"
-                                  : " line-clamp-1 w-96 cursor-pointer text-center text-sm font-normal text-cyan-800"
-                              }
-                              onClick={() => {
-                                setEditMode({
-                                  ...editMode,
-                                  key: "shortDescription",
-                                  id: _id,
-                                });
-                              }}
-                            >
-                              {shortDescription ? (
-                                shortDescription
-                              ) : (
-                                <Chip
-                                  variant="small"
-                                  color="purple"
-                                  value="Missing"
-                                  className=" m-2 mx-auto w-20 rounded-md text-center"
-                                />
-                              )}
-                            </Typography>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  },
-                )
-            ) : (
-              <tr className=" h-20 ">
-                <td colSpan={6} className=" my-auto text-center text-4xl">
-                  No Match Found{" "}
-                  <span className="inline-block">
-                    {" "}
-                    <Frown size={35} />
-                  </span>
-                </td>
-              </tr>
+                            </td>
+                          </tr>
+                        );
+                      },
+                    )
+                ) : (
+                  <tr className=" h-20 ">
+                    <td colSpan={6} className=" my-auto text-center text-4xl">
+                      No Match Found{" "}
+                      <span className="inline-block">
+                        {" "}
+                        <Frown size={35} />
+                      </span>
+                    </td>
+                  </tr>
+                )}
+              </>
             )}
           </tbody>
         </table>

@@ -15,9 +15,21 @@ exports.addNewBook = (req, res) => {
   null;
 };
 
-exports.updateBook = (req, res) => {
-  null;
+exports.updateBook = async (req, res) => {
+  const { id, ...update } = req.body;
+  try {
+    const updatedBook = await booksModel.findByIdAndUpdate(id, update, { new: true });
+    if (!updatedBook) {
+      return res.status(404).json({ error: 'Book not found' });
+    }
+    res.status(200).json(updatedBook);
+  } catch (error) {
+    console.error('Error updating book:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 };
+
+
 exports.deleteBooks = (req, res) => {
   null;
 };

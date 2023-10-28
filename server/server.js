@@ -38,6 +38,8 @@ mongoose
     console.error("MongoDB Atlas Connection Error:", err);
   });
 
+// Parse JSON 
+app.use(express.json());
 // Routers
 app.use("/books", booksRouter);
 

@@ -21,6 +21,7 @@ import {
   Checkbox,
   Textarea,
   Spinner,
+  input,
 } from "@material-tailwind/react";
 
 /**
@@ -81,7 +82,7 @@ const BooksTable = () => {
     // Update the books and displayed books
     setBooks(response);
     setDisplayedBooks(response);
-    // setIsLoading(false)
+    setIsLoading(false)
   }
 
   // Memoized filter for published books
@@ -166,9 +167,27 @@ const BooksTable = () => {
   };
 
 
+  const updateBookInfo = (bookObjectId, key, newValue) => {
+
+    // Use functional state update to avoid mutating state
+    setDisplayedBooks(prevBooks => prevBooks.map(book => {
+      if (book._id === bookObjectId) {
+        return { ...book, [key]: newValue };
+      }
+      return book;
+    }));
+
+    axios.put(`${BASE_URL}books`, { [key]: newValue, id: bookObjectId })
+      .then((res) => console.log(res))
+      .catch((err) => console.log(err));
+
+    // setBooks(displayedBooks)
+  }
+
+
 
   return (
-    <Card className="h-full w-full min-w-min">
+    <Card className="h-full w-full">
       <CardHeader floated={false} shadow={false} className="rounded-none">
         <div className="mb-8 flex items-center justify-between gap-8">
           <div>
@@ -254,7 +273,6 @@ const BooksTable = () => {
                   className="cursor-pointer border-y border-blue-gray-100 bg-blue-gray-50/50 p-4 transition-colors hover:bg-blue-gray-50"
                 >
                   <Typography
-                    variant="small"
                     color="blue-gray"
                     className="flex items-center justify-between gap-2 font-normal leading-none opacity-70"
                   >
@@ -268,7 +286,8 @@ const BooksTable = () => {
             {/* Spinner is displayed until the data loads  */}
             {isLoading ? (
               <tr className=" h-96">
-                <td colSpan={5} className=""><Spinner />
+                <td colSpan={5} className=" text-center border border-brown-900">
+                  <Spinner className=" h-32 w-32 mx-auto" />
                 </td>
               </tr>
             ) : (
@@ -323,10 +342,11 @@ const BooksTable = () => {
                                       onMouseLeave={() =>
                                         handleEditModeToggle("div")
                                       }
+                                      onChange={(e) => updateBookInfo(_id, "title", e.target.value)}
+
                                     />
                                   ) : (
                                     <Typography
-                                      variant="small"
                                       color="blue-gray"
                                       className="cursor-pointer font-normal"
                                       onClick={() =>
@@ -341,14 +361,12 @@ const BooksTable = () => {
                                   {editMode.id === _id &&
                                     editMode.key === "authors" ? (
                                     <Input
-                                      variant="small"
                                       label="Author"
                                       value={authorsString}
                                       onMouseOut={() => handleEditModeToggle("div")}
                                     />
                                   ) : (
                                     <Typography
-                                      variant="small"
                                       color="blue-gray"
                                       className="cursor-pointer"
                                       onClick={() => {
@@ -373,14 +391,15 @@ const BooksTable = () => {
                                   editMode.key === "publishedDate" ? (
                                   <Input
                                     type="date"
-                                    variant="small"
                                     label="Published Date"
                                     value={publishedDate}
                                     onMouseOut={() => handleEditModeToggle("div")}
+                                    onChange={(e) => {
+                                      console.log(e.target.value)
+                                    }}
                                   />
                                 ) : (
                                   <Typography
-                                    variant="small"
                                     color="blue-gray"
                                     className="cursor-pointer font-normal"
                                     onClick={() => {
@@ -395,7 +414,6 @@ const BooksTable = () => {
                                       formatDate(publishedDate)
                                     ) : (
                                       <Chip
-                                        variant="small"
                                         color="purple"
                                         value="Missing"
                                         className=" my-2 w-20 rounded-md text-center"
@@ -405,7 +423,6 @@ const BooksTable = () => {
                                 )}
 
                                 <Typography
-                                  variant="small"
                                   color="blue-gray"
                                   className="font-normal opacity-70"
                                 >
@@ -440,7 +457,6 @@ const BooksTable = () => {
                                 />
                               ) : (
                                 <Typography
-                                  variant="small"
                                   color="blue-gray"
                                   className={
                                     shortDescription
@@ -459,7 +475,6 @@ const BooksTable = () => {
                                     shortDescription
                                   ) : (
                                     <Chip
-                                      variant="small"
                                       color="purple"
                                       value="Missing"
                                       className=" m-2 mx-auto w-20 rounded-md text-center"
@@ -489,7 +504,7 @@ const BooksTable = () => {
         </table>
       </CardBody>
       <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
-        <Typography variant="small" color="blue-gray" className="font-normal">
+        <Typography color="blue-gray" className="font-normal">
           Page {currentPage} of {lastPage}
         </Typography>
         <div className="flex gap-2">

@@ -66,6 +66,7 @@ const BooksTable = () => {
     key: null,
   });
 
+
   // Base URL for data fetching
   const BASE_URL = "http://localhost:3500/";
 
@@ -355,7 +356,7 @@ const BooksTable = () => {
                           : "p-4 border-b border-blue-gray-50 max-w-96";
 
                         return (
-                          <tr key={_id} className=" h-36">
+                          <tr key={_id} className=" min-h-max">
                             <td>
                               <Checkbox
                                 ripple={false}
@@ -498,6 +499,7 @@ const BooksTable = () => {
                                 <Textarea
                                   variant="outlined"
                                   label="Description"
+                                  className=" h-auto"
                                   value={shortDescription}
                                   onMouseOut={() => handleEditModeToggle("div")}
                                   onChange={(e) => {

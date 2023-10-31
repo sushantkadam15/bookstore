@@ -22,6 +22,7 @@ import {
   Textarea,
   Spinner,
 } from "@material-tailwind/react";
+import NewBookDialog from "./NewBookDialog";
 
 /**
  * Represents a table component for displaying books.
@@ -144,7 +145,7 @@ const BooksTable = () => {
   };
 
   // Function to update book information
-  const handleUpdateBookInfo = (bookObjectId, key, newValue) => {
+  const handleUpdateBookInfo = async (bookObjectId, key, newValue) => {
     // Use functional state update to avoid mutating state
     setDisplayedBooks((prevBooks) =>
       prevBooks.map((book) => {
@@ -155,7 +156,7 @@ const BooksTable = () => {
       })
     );
 
-    const isUpdateSuccessful = axios
+    await axios
       .put(`${BASE_URL}books`, { [key]: newValue, id: bookObjectId })
       .then((res) => true)
       .catch((err) => console.log(err));
@@ -217,6 +218,9 @@ const BooksTable = () => {
     }
   }
 
+  const [openNewBookDialog, setOpenNewBookDialog] = useState(false);
+
+  const handleOpen = () => setOpenNewBookDialog(!openNewBookDialog);
 
   return (
     <Card className="h-full w-full">
@@ -294,6 +298,7 @@ const BooksTable = () => {
               }}
             />
           </div>
+          <NewBookDialog openNewBookDialog={openNewBookDialog} handleOpen={handleOpen} />
         </div>
       </CardHeader>
       <CardBody className="overflow-scroll px-0">

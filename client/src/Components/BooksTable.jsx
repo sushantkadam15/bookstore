@@ -162,10 +162,12 @@ const BooksTable = () => {
       .catch((err) => console.log(err));
   };
 
-  // Format a date for display and input
+  
+    // Format a date for display and input
+  const formatDate = (inputDate) => {
   let displayDateFormat
   let inputDateFormat
-  const formatDate = (inputDate) => {
+
     if (inputDate) {
       const date = new Date(inputDate);
 
@@ -218,6 +220,13 @@ const BooksTable = () => {
     }
   }
 
+  const authorsStringToArray = (e) => {
+    const newValueString = e.target.value;
+    // Splits the string by ',' with optional spaces and converts it into an array
+    const newValueArray = newValueString.split(/\s*,\s*|,/);
+    return newValueArray
+  }
+
   const [openNewBookDialog, setOpenNewBookDialog] = useState(false);
 
   const handleOpen = () => setOpenNewBookDialog(!openNewBookDialog);
@@ -240,6 +249,7 @@ const BooksTable = () => {
             <Button
               className="flex items-center gap-3  bg-blue-gray-800"
               size="sm"
+              onClick={handleOpen}
             >
               <BookPlus />
             </Button>
@@ -298,7 +308,7 @@ const BooksTable = () => {
               }}
             />
           </div>
-          <NewBookDialog openNewBookDialog={openNewBookDialog} handleOpen={handleOpen} />
+          <NewBookDialog openNewBookDialog={openNewBookDialog} handleOpen={handleOpen} authorsStringToArray={authorsStringToArray} convertUserInputToBackendDate={convertUserInputToBackendDate} BASE_URL={BASE_URL}  setDisplayedBooks={setDisplayedBooks}/>
         </div>
       </CardHeader>
       <CardBody className="overflow-scroll px-0">
@@ -406,11 +416,8 @@ const BooksTable = () => {
                                       value={authorsString}
                                       onMouseOut={() => handleEditModeToggle("div")}
                                       onChange={(e) => {
-                                        const newValueString = e.target.value;
-
-                                        // Splits the string by ',' with optional spaces and converts it into an array
-                                        const newValueArray = newValueString.split(/\s*,\s*|,/);
-                                        handleUpdateBookInfo(_id, "authors", newValueArray)
+                                        const newAuthorsArray = authorsStringToArray(e)
+                                        handleUpdateBookInfo(_id, "authors", newAuthorsArray)
                                       }}
 
                                     />

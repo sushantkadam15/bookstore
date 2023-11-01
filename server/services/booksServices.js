@@ -11,9 +11,29 @@ exports.getAllBooks = async (req, res) => {
   }
 };
 
-exports.addNewBook = (req, res) => {
-  null;
+exports.addNewBook = async (req, res) => {
+  try {
+    const bookData = req.body;
+    
+    // Check if a book with the same data already exists
+    const existingBook = await booksModel.findOne({ title: bookData.title });
+
+    if (existingBook) {
+      return res.status(400).json({ error: 'A book with the same name already exists.' });
+    }
+
+    // If no existing book found, create and save the new book
+    const newBook = new booksModel(bookData);
+    const savedBook = await newBook.save();
+
+    res.json(savedBook);
+  } catch (error) {
+    console.error('Error creating book:', error);
+    res.status(500).json({ error: 'Failed to create a new book.' });
+  }
 };
+
+
 
 exports.updateBook = async (req, res) => {
   const { id, ...update } = req.body;

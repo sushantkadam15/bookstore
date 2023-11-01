@@ -7,10 +7,11 @@ import {
     DialogFooter,
     Typography,
     Input,
-    Textarea
+    Textarea,
 } from "@material-tailwind/react";
+import axios from "axios";
 
-const NewBookDialog = ({ openNewBookDialog, handleOpen }) => {
+const NewBookDialog = ({ openNewBookDialog, handleOpen, authorsStringToArray, convertUserInputToBackendDate, BASE_URL, setDisplayedBooks}) => {
     const [newBook, setNewBook] = useState({
         title: "",
         isbn: "",
@@ -29,15 +30,22 @@ const NewBookDialog = ({ openNewBookDialog, handleOpen }) => {
         })
     }
 
-    const handleNewBook = () => {
-        const body = {
-        }
-    }
+    const handleNewBook = async () => {
+        await axios
+          .post(`${BASE_URL}books`, newBook)
+          .then((response) => {
+            const newBookData = response.data;
+            setDisplayedBooks((prevBooks) => [newBookData, ...prevBooks]);
+          })
+          .catch((error) => {
+            console.error('Error adding a new book:', error);
+          });
+      };
+      
 
 
     return (
         <>
-            <Button onClick={handleOpen}>Long Dialog</Button>
             <Dialog open={openNewBookDialog} handler={handleOpen}>
                 <DialogHeader>Add Book</DialogHeader>
                 <DialogBody className="h-[36rem] w-[80%] mx-auto mt-5 overflow-scroll flex flex-col gap-10">
@@ -45,7 +53,12 @@ const NewBookDialog = ({ openNewBookDialog, handleOpen }) => {
                         onChange={(e) => { updateNewBookInfo("title", e.target.value) }}
                     />
                     <div>
-                        <Input variant="standard" label="Authors" required />
+                        <Input variant="standard" label="Authors" required
+                            onChange={(e) => {
+                                const newAuthorsArray = authorsStringToArray(e)
+                                updateNewBookInfo("authors", newAuthorsArray)
+                            }}
+                        />
                         <Typography
                             variant="small"
                             color="gray"
@@ -73,7 +86,12 @@ const NewBookDialog = ({ openNewBookDialog, handleOpen }) => {
                     <Input variant="standard" label="Image URL"
                         onChange={(e) => { updateNewBookInfo("thumbnailUrl", e.target.value) }}
                     />
-                    <Input type="date" variant="standard" label="Published Date" required />
+                    <Input type="date" variant="standard" label="Published Date" required
+                        onChange={(e) => {
+                            const formattedDate = convertUserInputToBackendDate(e.target.value);
+                            updateNewBookInfo("publishedDate", formattedDate)
+
+                        }} />
                     <Textarea variant="standard" label="Description" onChange={(e) => { updateNewBookInfo("shortDescription", e.target.value) }} />
                 </DialogBody>
                 <DialogFooter className="space-x-2">

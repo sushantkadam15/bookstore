@@ -36,7 +36,7 @@ const BooksTable = () => {
   const [isViewMoreEnabled, setIsViewMoreEnabled] = useState(false);
 
   // Pagination variables
-  const itemsPerPage = isViewMoreEnabled ? displayedBooks.length : 5;
+  const itemsPerPage = isViewMoreEnabled ? displayedBooks.length : 5; 
   const [currentPage, setCurrentPage] = useState(1);
   const lastPage = Math.ceil(displayedBooks.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -67,13 +67,14 @@ const BooksTable = () => {
     key: null,
   });
 
-
   // Base URL for data fetching
   const BASE_URL = "http://localhost:3500/";
 
   // Function to fetch book data from the specified BASE_URL
   async function fetchBooks() {
-    const response = await axios.get(`${BASE_URL}books`).then((res) => res.data);
+    const response = await axios
+      .get(`${BASE_URL}books`)
+      .then((res) => res.data);
 
     // Update the books and displayed books
     setBooks(response);
@@ -89,7 +90,7 @@ const BooksTable = () => {
 
   const booksWithUnknownPublishedDate = useMemo(() => {
     const unknownPublishedDate = books.filter(
-      (book) => !book.hasOwnProperty("status") || book.status !== "PUBLISH"
+      (book) => !book.hasOwnProperty("status") || book.status !== "PUBLISH",
     );
     return unknownPublishedDate;
   }, [books]);
@@ -111,29 +112,32 @@ const BooksTable = () => {
   }, []);
 
   // Function to perform a search on displayed books
-  const handleSearch = useCallback((searchQuery) => {
-    let filteredBooks;
-    if (selectedTab === "published") {
-      filteredBooks = publishedBooks;
-    } else if (selectedTab === "unknown") {
-      filteredBooks = booksWithUnknownPublishedDate;
-    } else {
-      filteredBooks = books;
-    }
-    if (searchQuery === "") {
-      setDisplayedBooks(filteredBooks);
-      return;
-    }
-    const searchOptions = {
-      keys: ["title"],
-      threshold: 0.3,
-    };
+  const handleSearch = useCallback(
+    (searchQuery) => {
+      let filteredBooks;
+      if (selectedTab === "published") {
+        filteredBooks = publishedBooks;
+      } else if (selectedTab === "unknown") {
+        filteredBooks = booksWithUnknownPublishedDate;
+      } else {
+        filteredBooks = books;
+      }
+      if (searchQuery === "") {
+        setDisplayedBooks(filteredBooks);
+        return;
+      }
+      const searchOptions = {
+        keys: ["title"],
+        threshold: 0.3,
+      };
 
-    const fuse = new Fuse(filteredBooks, searchOptions);
-    let searchResult = fuse.search(searchQuery);
-    searchResult = searchResult.map((foundResults) => foundResults.item);
-    setDisplayedBooks(searchResult);
-  }, [selectedTab, publishedBooks, booksWithUnknownPublishedDate, books]);
+      const fuse = new Fuse(filteredBooks, searchOptions);
+      let searchResult = fuse.search(searchQuery);
+      searchResult = searchResult.map((foundResults) => foundResults.item);
+      setDisplayedBooks(searchResult);
+    },
+    [selectedTab, publishedBooks, booksWithUnknownPublishedDate, books],
+  );
 
   // Function to toggle edit mode for a specific element
   const handleEditModeToggle = (elementToActivate, id, key) => {
@@ -153,7 +157,7 @@ const BooksTable = () => {
           return { ...book, [key]: newValue };
         }
         return book;
-      })
+      }),
     );
 
     await axios
@@ -162,35 +166,33 @@ const BooksTable = () => {
       .catch((err) => console.log(err));
   };
 
-  
-    // Format a date for display and input
+  // Format a date for display and input
   const formatDate = (inputDate) => {
-  let displayDateFormat
-  let inputDateFormat
+    let displayDateFormat;
+    let inputDateFormat;
 
-    if (inputDate) {
-      const date = new Date(inputDate);
+    const date = new Date(inputDate);
 
-      // Format the date for display as "October 9, 2023"
-      displayDateFormat = new Intl.DateTimeFormat("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      }).format(date);
+    const options = {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      timeZone: "UTC",
+    };
+    displayDateFormat = date.toLocaleDateString("en-US", options);
 
-      // Format the date for input as "2023-10-14"
-      inputDateFormat = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
-        date.getDate()
-      ).padStart(2, "0")}`;
-
+    // Format the date for input as "2023-10-14"
+    if (date) {
+      inputDateFormat = `${date.getUTCFullYear()}-${String(
+        date.getUTCMonth() + 1,
+      ).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`;
     }
-
 
     // Set the max date for user input to today
     const today = new Date();
-    const maxDateFormat = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(
-      today.getDate()
-    ).padStart(2, "0")}`;
+    const maxDateFormat = `${today.getUTCFullYear()}-${String(
+      today.getUTCMonth() + 1,
+    ).padStart(2, "0")}-${String(today.getUTCDate()).padStart(2, "0")}`;
 
     return {
       displayDateFormat,
@@ -218,14 +220,14 @@ const BooksTable = () => {
     } finally {
       setIsLoading(false);
     }
-  }
+  };
 
   const authorsStringToArray = (e) => {
     const newValueString = e.target.value;
     // Splits the string by ',' with optional spaces and converts it into an array
     const newValueArray = newValueString.split(/\s*,\s*|,/);
-    return newValueArray
-  }
+    return newValueArray;
+  };
 
   const [openNewBookDialog, setOpenNewBookDialog] = useState(false);
 
@@ -286,8 +288,8 @@ const BooksTable = () => {
                   key={value}
                   value={value}
                   onClick={() => {
-                    setSelectedTab(value)
-                    handleTabChange(value)
+                    setSelectedTab(value);
+                    handleTabChange(value);
                     setCurrentPage(1);
                   }}
                 >
@@ -303,12 +305,19 @@ const BooksTable = () => {
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
-                handleSearch(e.target.value)
+                handleSearch(e.target.value);
                 setCurrentPage(1);
               }}
             />
           </div>
-          <NewBookDialog openNewBookDialog={openNewBookDialog} handleOpen={handleOpen} authorsStringToArray={authorsStringToArray} convertUserInputToBackendDate={convertUserInputToBackendDate} BASE_URL={BASE_URL}  setDisplayedBooks={setDisplayedBooks}/>
+          <NewBookDialog
+            openNewBookDialog={openNewBookDialog}
+            handleOpen={handleOpen}
+            authorsStringToArray={authorsStringToArray}
+            convertUserInputToBackendDate={convertUserInputToBackendDate}
+            BASE_URL={BASE_URL}
+            setDisplayedBooks={setDisplayedBooks}
+          />
         </div>
       </CardHeader>
       <CardBody className="overflow-scroll px-0">
@@ -335,7 +344,7 @@ const BooksTable = () => {
             {isLoading ? (
               <tr className=" h-96">
                 <td colSpan={5} className=" text-center">
-                  <Spinner className=" h-32 w-32 mx-auto" />
+                  <Spinner className=" mx-auto h-32 w-32" />
                 </td>
               </tr>
             ) : (
@@ -361,10 +370,13 @@ const BooksTable = () => {
                       ) => {
                         const isLast = index === displayedBooks.length - 1;
 
-                        const authorsString =
-                          authors && authors.join(", ");
+                        const authorsString = authors && authors.join(", ");
 
-                        const { displayDateFormat, inputDateFormat, maxDateFormat } = formatDate(publishedDate)
+                        const {
+                          displayDateFormat,
+                          inputDateFormat,
+                          maxDateFormat,
+                        } = formatDate(publishedDate);
 
                         const classes = isLast
                           ? "p-4"
@@ -382,26 +394,40 @@ const BooksTable = () => {
                             {/* Title and Authors  */}
                             <td className={" max-w-sm p-4"}>
                               <div className="flex items-center gap-3">
-                                <Avatar src={thumbnailUrl} alt={title} size="xl" loading="lazy" />
+                                <Avatar
+                                  src={thumbnailUrl}
+                                  alt={title}
+                                  size="xl"
+                                  loading="lazy"
+                                />
                                 <div className="mx-2 flex w-8/12 flex-col">
                                   {/* Title   */}
                                   {editMode.id === _id &&
-                                    editMode.key === "title" ? (
+                                  editMode.key === "title" ? (
                                     <Input
                                       label="Title"
                                       value={title}
                                       onMouseLeave={() =>
                                         handleEditModeToggle("div")
                                       }
-                                      onChange={(e) => handleUpdateBookInfo(_id, "title", e.target.value)}
-
+                                      onChange={(e) =>
+                                        handleUpdateBookInfo(
+                                          _id,
+                                          "title",
+                                          e.target.value,
+                                        )
+                                      }
                                     />
                                   ) : (
                                     <Typography
                                       color="blue-gray"
                                       className="cursor-pointer font-normal"
                                       onClick={() =>
-                                        handleEditModeToggle("input", _id, "title")
+                                        handleEditModeToggle(
+                                          "input",
+                                          _id,
+                                          "title",
+                                        )
                                       }
                                     >
                                       {title}
@@ -410,16 +436,22 @@ const BooksTable = () => {
 
                                   {/* Authors  */}
                                   {editMode.id === _id &&
-                                    editMode.key === "authors" ? (
+                                  editMode.key === "authors" ? (
                                     <Input
                                       label="Author"
                                       value={authorsString}
-                                      onMouseOut={() => handleEditModeToggle("div")}
+                                      onMouseOut={() =>
+                                        handleEditModeToggle("div")
+                                      }
                                       onChange={(e) => {
-                                        const newAuthorsArray = authorsStringToArray(e)
-                                        handleUpdateBookInfo(_id, "authors", newAuthorsArray)
+                                        const newAuthorsArray =
+                                          authorsStringToArray(e);
+                                        handleUpdateBookInfo(
+                                          _id,
+                                          "authors",
+                                          newAuthorsArray,
+                                        );
                                       }}
-
                                     />
                                   ) : (
                                     <Typography
@@ -444,17 +476,23 @@ const BooksTable = () => {
                             <td className=" w-72 p-4">
                               <div className="flex flex-col">
                                 {editMode.id === _id &&
-                                  editMode.key === "publishedDate" ? (
+                                editMode.key === "publishedDate" ? (
                                   <Input
                                     type="date"
                                     label="Published Date"
                                     max={maxDateFormat}
                                     value={inputDateFormat}
-                                    onMouseOut={() => handleEditModeToggle("div")}
+                                    onBlur={() => handleEditModeToggle("div")}
                                     onChange={(e) => {
-                                      const formattedDate = convertUserInputToBackendDate(e.target.value)
-                                      handleUpdateBookInfo(_id, "publishedDate", formattedDate)
-
+                                      const formattedDate =
+                                        convertUserInputToBackendDate(
+                                          e.target.value,
+                                        );
+                                      handleUpdateBookInfo(
+                                        _id,
+                                        "publishedDate",
+                                        formattedDate,
+                                      );
                                     }}
                                   />
                                 ) : (
@@ -495,7 +533,9 @@ const BooksTable = () => {
                                   variant="ghost"
                                   size="sm"
                                   value={
-                                    status === "PUBLISH" ? "Published" : "Unknown"
+                                    status === "PUBLISH"
+                                      ? "Published"
+                                      : "Unknown"
                                   }
                                   color={
                                     status === "PUBLISH" ? "green" : "blue-gray"
@@ -507,7 +547,7 @@ const BooksTable = () => {
                             {/* Short Description  */}
                             <td className={classes}>
                               {editMode.id === _id &&
-                                editMode.key === "shortDescription" ? (
+                              editMode.key === "shortDescription" ? (
                                 <Textarea
                                   variant="outlined"
                                   label="Description"
@@ -515,7 +555,11 @@ const BooksTable = () => {
                                   value={shortDescription}
                                   onMouseOut={() => handleEditModeToggle("div")}
                                   onChange={(e) => {
-                                    handleUpdateBookInfo(_id, "shortDescription", e.target.value)
+                                    handleUpdateBookInfo(
+                                      _id,
+                                      "shortDescription",
+                                      e.target.value,
+                                    );
                                   }}
                                 />
                               ) : (

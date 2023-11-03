@@ -236,6 +236,16 @@ const selectedBooksRef = useRef([])
 
   const handleOpen = () => setOpenNewBookDialog(!openNewBookDialog);
 
+  const handleBulkDelete = async () => {
+    try {
+      await axios.delete(`${BASE_URL}books`, { data: { deleteItemsList: selectedBooksRef } });
+      console.log(selectedBooksRef);
+    } catch (error) {
+
+      console.error(error);
+    }
+  }
+  
   return (
     <Card className="h-full w-full">
       <CardHeader floated={false} shadow={false} className="rounded-none">
@@ -261,6 +271,7 @@ const selectedBooksRef = useRef([])
             <Button
               className="flex items-center gap-3  bg-blue-gray-800"
               size="sm"
+              onClick={handleBulkDelete}
             >
               <BookX />
             </Button>

@@ -52,7 +52,7 @@ exports.updateBook = async (req, res) => {
 
 
 exports.deleteBooks = (req, res) => {
-  null;
+  console.log("🚀 ~ file: booksServices.js:55 ~ exports.deleteBooks ~ req:", req)
 };
 
 exports.resetBooksDB = async (req, res) => {

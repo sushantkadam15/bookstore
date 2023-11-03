@@ -241,7 +241,6 @@ const selectedBooksRef = useRef([])
       await axios.delete(`${BASE_URL}books`, { data: { deleteItemsList: selectedBooksRef } });
       console.log(selectedBooksRef);
     } catch (error) {
-
       console.error(error);
     }
   }

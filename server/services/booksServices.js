@@ -25,8 +25,9 @@ exports.addNewBook = async (req, res) => {
     // If no existing book found, create and save the new book
     const newBook = new booksModel(bookData);
     const savedBook = await newBook.save();
+    
+    res.status(200).json(savedBook);
 
-    res.json(savedBook);
   } catch (error) {
     console.error('Error creating book:', error);
     res.status(500).json({ error: 'Failed to create a new book.' });

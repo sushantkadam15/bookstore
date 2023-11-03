@@ -1,5 +1,5 @@
 // import booksData from "../Seed Data/amazon.books.json";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { BookPlus, BookX, RotateCw } from "lucide-react";
 import { Frown } from "lucide-react";
@@ -69,6 +69,9 @@ const BooksTable = () => {
 
   // Base URL for data fetching
   const BASE_URL = "http://localhost:3500/";
+
+  // Used for deletion 
+const selectedBooksRef = useRef([])
 
   // Function to fetch book data from the specified BASE_URL
   async function fetchBooks() {
@@ -364,7 +367,6 @@ const BooksTable = () => {
                           shortDescription,
                           status,
                           authors,
-                          categories,
                         },
                         index,
                       ) => {
@@ -388,6 +390,16 @@ const BooksTable = () => {
                               <Checkbox
                                 ripple={false}
                                 className="h-6 w-6 rounded-full border-gray-900/20 bg-gray-900/10 transition-all hover:scale-105 hover:before:opacity-0"
+                                onChange={(e) => {
+                                   
+                                  if(e.target.checked){
+                                    selectedBooksRef.current.push(_id)
+                                  } else{
+                                    const filteredSelectedBooks = selectedBooksRef.current.filter((id) => id === _id)
+                                    selectedBooksRef.current = filteredSelectedBooks
+                                  }
+                                  console.log(selectedBooksRef.current)
+                                }}
                               />
                             </td>
 

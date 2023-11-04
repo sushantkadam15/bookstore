@@ -53,8 +53,10 @@ exports.updateBook = async (req, res) => {
 
 // Delete books
 exports.deleteBooks = (req, res) => {
-  const itemsToDelete = req.body.current;
-  if(itemsToDelete === undefined){
+
+  const itemsToDelete = req.body;
+
+  if(itemsToDelete === undefined || itemsToDelete.length === 0){
     return res.status(500).json({ error: 'No Books Selected' });
   }
 

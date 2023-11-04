@@ -21,7 +21,6 @@ import {
   Checkbox,
   Textarea,
   Spinner,
-  Alert,
 } from "@material-tailwind/react";
 import NewBookDialog from "./NewBookDialog";
 
@@ -29,7 +28,7 @@ import NewBookDialog from "./NewBookDialog";
  * Represents a table component for displaying books.
  * @returns The BooksTable component.
  */
-const BooksTable = () => {
+const BooksTable = ({ showAlert }) => {
   // State variables
   const [isLoading, setIsLoading] = useState(true);
   const [books, setBooks] = useState([]);
@@ -42,13 +41,6 @@ const BooksTable = () => {
   const lastPage = Math.ceil(displayedBooks.length / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-
-  // Alert Message Variable
-  const [alert, setAlert] = useState({
-    display: false,
-    message: "",
-    color: "",
-  });
 
   // Tab and search variables
   const [selectedTab, setSelectedTab] = useState("all");
@@ -79,7 +71,7 @@ const BooksTable = () => {
   const BASE_URL = "http://localhost:3500/";
 
   // Used for deletion
-  const selectedBooksRef = useRef([]);
+  const [selectedBooksIds, setSelectedBooksIds] = useState([]);
 
   // Function to fetch book data from the specified BASE_URL
   async function fetchBooks() {
@@ -245,60 +237,29 @@ const BooksTable = () => {
 
   const handleOpen = () => setOpenNewBookDialog(!openNewBookDialog);
 
-  const showAlert = (display, message, success) => {
-    setAlert({
-      ...alert,
-      display: display,
-      message: message,
-      color: success ? "teal" : "red",
-    });
-    if (display) {
-      setTimeout(() => {
-        setAlert({
-          ...alert,
-          display: false,
-          message: "",
-          color: "",
-        });
-      }, 3000);
-    }
-  };
-
+  // ##TODO replace ref with state
   const handleBulkDelete = async () => {
     try {
       const response = await axios.delete(`${BASE_URL}books`, {
-        data: selectedBooksRef.current,
+        data: selectedBooksIds,
       });
-      console.log(response)
       // Show success alert
-      showAlert(true, response.response, true)
+      showAlert(true, response.data.message, true);
       // Filter the deleted books form the displayed books
       setDisplayedBooks((prevDisplayedBooks) =>
         prevDisplayedBooks.filter(
-          (book) => !selectedBooksRef.current.includes(book._id),
+          (book) => !selectedBooksIds.includes(book._id),
         ),
       );
       // Clearing the selected books
-      selectedBooksRef.current = [];
-
-      console.log(response.data.message);
+      setSelectedBooksIds([]);
     } catch (error) {
-      console.error(error);
+      showAlert(true, error.response.data.error, false);
     }
   };
 
- 
-
   return (
     <Card className="h-full w-full">
-      {/* Alerts  */}
-      {alert.display && (
-        <Alert className=" mx-[10%] h-14" color={alert.color}>
-          {" "}
-          {alert.message}{" "}
-        </Alert>
-      )}
-
       <CardHeader floated={false} shadow={false} className="rounded-none">
         <div className="mb-8 flex items-center justify-between gap-8">
           <div>
@@ -320,7 +281,6 @@ const BooksTable = () => {
               <BookPlus />
             </Button>
             <Button
-              disabled={selectedBooksRef.current.length}
               className="flex items-center gap-3  bg-blue-gray-800"
               size="sm"
               onClick={handleBulkDelete}
@@ -455,16 +415,17 @@ const BooksTable = () => {
                                 className="h-6 w-6 rounded-full border-gray-900/20 bg-gray-900/10 transition-all hover:scale-105 hover:before:opacity-0"
                                 onChange={(e) => {
                                   if (e.target.checked) {
-                                    selectedBooksRef.current.push(_id);
+                                    setSelectedBooksIds([
+                                      ...selectedBooksIds,
+                                      _id,
+                                    ]);
                                   } else {
                                     const filteredSelectedBooks =
-                                      selectedBooksRef.current.filter(
-                                        (id) => id === _id,
+                                      selectedBooksIds.filter(
+                                        (id) => id !== _id,
                                       );
-                                    selectedBooksRef.current =
-                                      filteredSelectedBooks;
+                                    setSelectedBooksIds(filteredSelectedBooks);
                                   }
-                                  console.log(selectedBooksRef.current);
                                 }}
                               />
                             </td>

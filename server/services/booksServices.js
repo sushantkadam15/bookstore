@@ -1,6 +1,7 @@
 const booksModel = require("../models/booksModels");
 const booksJsonData = require("../data/amazon.books.json");
 
+// Get all books
 exports.getAllBooks = async (req, res) => {
   try {
     const allBooks = await booksModel.find({});
@@ -11,6 +12,7 @@ exports.getAllBooks = async (req, res) => {
   }
 };
 
+// Add a new book
 exports.addNewBook = async (req, res) => {
   try {
     const bookData = req.body;
@@ -34,8 +36,7 @@ exports.addNewBook = async (req, res) => {
   }
 };
 
-
-
+// Update a book
 exports.updateBook = async (req, res) => {
   const { id, ...update } = req.body;
   try {
@@ -50,11 +51,23 @@ exports.updateBook = async (req, res) => {
   }
 };
 
-
+// Delete books
 exports.deleteBooks = (req, res) => {
-  console.log("🚀 ~ file: booksServices.js:55 ~ exports.deleteBooks ~ req:", req)
+  const itemsToDelete = req.body.current;
+  if(itemsToDelete === undefined){
+    return res.status(500).json({ error: 'No Books Selected' });
+  }
+
+  booksModel.deleteMany({ _id: { $in: itemsToDelete } })
+    .then(() => {
+      return res.status(200).json({ message: 'Books deleted successfully.' });
+    })
+    .catch((err) => {
+      return res.status(500).json({ error: 'An error occurred while deleting books.' });
+    });
 };
 
+// Reset the database with JSON data
 exports.resetBooksDB = async (req, res) => {
   try {
     // Delete all existing books

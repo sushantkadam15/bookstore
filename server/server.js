@@ -51,3 +51,5 @@ app.listen(port, () => {
 app.on("error", (err) => {
   console.error("Server Error:", err);
 });
+
+module.exports = app;

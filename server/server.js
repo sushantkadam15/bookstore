@@ -12,7 +12,7 @@ const booksRouter = require("./controllers/booksController");
 // Middleware setup
 app.use(morgan("combined"));
 
-const allowedOrigins = ["http://localhost:3000"];
+const allowedOrigins = ["http://localhost:3000", "151.106.97.221"];
 const corsOptions = {
   origin: function (origin, callback) {
     if (allowedOrigins.indexOf(origin) !== -1 || !origin) {

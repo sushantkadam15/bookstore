@@ -87,4 +87,7 @@ xcuserdata/
 /*.gcno
 **/xcshareddata/WorkspaceSettings.xcsettings
 
+# Build files 
+client/build/*
+
 # End of https://www.toptal.com/developers/gitignore/api/react,macos,visualstudiocode,xcode

@@ -21,6 +21,7 @@ import {
   Checkbox,
   Textarea,
   Spinner,
+  Tooltip,
 } from "@material-tailwind/react";
 import NewBookDialog from "./NewBookDialog";
 
@@ -237,7 +238,7 @@ const BooksTable = ({ showAlert }) => {
 
   const handleOpen = () => setOpenNewBookDialog(!openNewBookDialog);
 
-  // ##TODO replace ref with state
+  // Books Deletion
   const handleBulkDelete = async () => {
     try {
       const response = await axios.delete(`${BASE_URL}books`, {
@@ -273,27 +274,33 @@ const BooksTable = ({ showAlert }) => {
 
           {/* Action Buttons  */}
           <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
-            <Button
-              className="flex items-center gap-3  bg-blue-gray-800"
-              size="sm"
-              onClick={handleOpen}
-            >
-              <BookPlus />
-            </Button>
-            <Button
-              className="flex items-center gap-3  bg-blue-gray-800"
-              size="sm"
-              onClick={handleBulkDelete}
-            >
-              <BookX />
-            </Button>
-            <Button
-              className="flex items-center gap-3  bg-blue-gray-800"
-              size="sm"
-              onClick={handleReset}
-            >
-              <RotateCw />
-            </Button>
+            <Tooltip content="Add">
+              <Button
+                className="flex items-center gap-3  bg-blue-gray-800"
+                size="sm"
+                onClick={handleOpen}
+              >
+                <BookPlus />
+              </Button>
+            </Tooltip>
+            <Tooltip content="Delete Selection">
+              <Button
+                className="flex items-center gap-3  bg-blue-gray-800"
+                size="sm"
+                onClick={handleBulkDelete}
+              >
+                <BookX />
+              </Button>
+            </Tooltip>
+            <Tooltip content="Reset to Default">
+              <Button
+                className="flex items-center gap-3  bg-blue-gray-800"
+                size="sm"
+                onClick={handleReset}
+              >
+                <RotateCw />
+              </Button>
+            </Tooltip>
             <Button
               variant="outlined"
               size="sm"

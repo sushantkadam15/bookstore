@@ -20,6 +20,7 @@ const NewBookDialog = ({
   BASE_URL,
   setDisplayedBooks,
 }) => {
+  // State to manage the data for a new book
   const [newBook, setNewBook] = useState({
     title: "",
     isbn: "",
@@ -29,31 +30,35 @@ const NewBookDialog = ({
     authors: [],
   });
 
-  const [alert , setAlert] = useState({
+  // State to manage alerts for user feedback
+  const [alert, setAlert] = useState({
     display: false,
     message: "",
-    color: ""
-  })
+    color: "",
+  });
 
+  // Function to display alerts with specified parameters
   const showAlert = (display, message, success) => {
     setAlert({
-        ...alert,
-        display: display,
-        message: message,
-        color: success ? "teal": "red" 
-    })
-    if(display){
-        setTimeout(()=> {
-            setAlert({
-                ...alert,
-                display: false,
-                message: "",
-                color: "" 
-            })
-        }, 3000)
+      ...alert,
+      display: display,
+      message: message,
+      color: success ? "teal" : "red",
+    });
+    if (display) {
+      // Hide the alert after 3 seconds
+      setTimeout(() => {
+        setAlert({
+          ...alert,
+          display: false,
+          message: "",
+          color: "",
+        });
+      }, 3000);
     }
-  }
+  };
 
+  // Function to update the information for a new book
   const updateNewBookInfo = (key, newValue) => {
     setNewBook({
       ...newBook,
@@ -61,41 +66,47 @@ const NewBookDialog = ({
     });
   };
 
+  // Function to handle the addition of a new book
   const handleNewBook = async () => {
-    await axios
-      .post(`${BASE_URL}books`, newBook)
-      .then((response) => {
-        const newBookData = response.data;
-        setDisplayedBooks((prevBooks) => [newBookData, ...prevBooks]);
-        showAlert(true, "Book Added To The Rack :)", true)
-        setNewBook({
-          ...newBook,
-          title: "",
-          isbn: "",
-          publishedDate: "",
-          thumbnailUrl: "",
-          shortDescription: "",
-          authors: [],
-        });
-      })
-      .catch((error) => {
-        showAlert(true, error.response.data.error, false)
+    try {
+      // Send a POST request to add the new book to the server
+      const response = await axios.post(`${BASE_URL}books`, newBook);
+
+      // Update the displayed books with the new data
+      const newBookData = response.data;
+      setDisplayedBooks((prevBooks) => [newBookData, ...prevBooks]);
+
+      // Show a success alert and reset the newBook state
+      showAlert(true, `${newBook.title} added to the rack!`, true);
+      setNewBook({
+        ...newBook,
+        title: "",
+        isbn: "",
+        publishedDate: "",
+        thumbnailUrl: "",
+        shortDescription: "",
+        authors: [],
       });
+    } catch (error) {
+      // Show an error alert if the request fails
+      showAlert(true, error.response.data.error, false);
+    }
   };
 
   return (
     <>
       <Dialog open={openNewBookDialog} handler={handleOpen}>
         <DialogHeader>Add Book</DialogHeader>
-         <div className=" h-14 flex justify-center items-cente">
-         {alert.display && <Alert className=" mx-[10%] h-14" color={alert.color}> {alert.message} </Alert>}
+        <div className=" items-cente flex h-14 justify-center">
+          {alert.display && (
+            <Alert className=" mx-[10%] h-14" color={alert.color}>
+              {" "}
+              {alert.message}{" "}
+            </Alert>
+          )}
         </div>
-        
 
-        
-
-        <DialogBody className="mx-auto overflow-hidden mt-5 flex h-[40rem] w-[80%] flex-col gap-10 ">
-
+        <DialogBody className="mx-auto mt-5 flex h-[40rem] w-[80%] flex-col gap-10 overflow-hidden ">
           <Input
             variant="standard"
             label="Book Title"

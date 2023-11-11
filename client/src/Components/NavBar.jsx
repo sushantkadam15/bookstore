@@ -14,10 +14,10 @@ const ProfileMenu = () => {
   return (
     <Menu placement="bottom-end">
       <MenuHandler>
-        <Button
-          variant="text"
-          color="blue-gray"
-          className="flex items-center gap-1 rounded-full py-0.5 pl-0.5 pr-2 lg:ml-auto"
+        <a
+          href="https://www.linkedin.com/in/sushant-p-kadam/"
+          target="_blank"
+          rel="noreferrer"
         >
           <Avatar
             variant="circular"
@@ -26,7 +26,7 @@ const ProfileMenu = () => {
             className="border border-gray-900 p-0.5"
             src={avatar}
           />
-        </Button>
+        </a>
       </MenuHandler>
     </Menu>
   );

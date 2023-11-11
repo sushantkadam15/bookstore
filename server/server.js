@@ -6,7 +6,7 @@ const cors = require("cors");
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT;
+const port = process.env.PORT || 3500;
 const databaseURL = process.env.DATABASE_URL;
 const booksRouter = require("./controllers/booksController");
 // Middleware setup
@@ -38,7 +38,7 @@ mongoose
     console.error("MongoDB Atlas Connection Error:", err);
   });
 
-// Parse JSON 
+// Parse JSON
 app.use(express.json());
 // Routers
 app.use("/books", booksRouter);

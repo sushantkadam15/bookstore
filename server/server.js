@@ -16,7 +16,7 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://151.106.97.221",
   "https://151.106.97.221",
-  "https://bookstore.sushantk.com/",
+  "https://bookstore.sushantk.com",
 ];
 const corsOptions = {
   origin: function (origin, callback) {

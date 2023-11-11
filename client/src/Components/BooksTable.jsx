@@ -69,7 +69,7 @@ const BooksTable = ({ showAlert }) => {
   });
 
   // Base URL for data fetching
-  const BASE_URL = "http://localhost:3500/";
+  const BASE_URL = "https://bookstore-api-i44g.onrender.com/";
 
   // Used for deletion
   const [selectedBooksIds, setSelectedBooksIds] = useState([]);
